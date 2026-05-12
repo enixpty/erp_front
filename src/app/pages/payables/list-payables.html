@@ -1,0 +1,22 @@
+<div class="p-4">
+  <p-card header="Cuentas por Pagar">
+    <app-customtable
+      [genericCol]="cols"
+      [loaderFunction]="loadPayables"
+      [actionsTemplate]="actions"
+      [columnTemplates]="{ 'aging': agingTemplate }"
+      titletable="Cuentas Pendientes">
+      <ng-template #actions let-item>
+        <p-button label="Pagar" icon="pi pi-wallet" severity="success" text (onClick)="openPaymentModal(item)"></p-button>
+      </ng-template>
+    </app-customtable>
+
+<ng-template #agingTemplate let-item>
+  <span [class]="item.due_date ? (calculateAging(item.due_date).includes('Vencida') ? 'text-red-600 font-bold' : 'text-surface-600') : ''">
+    {{ item.due_date ? calculateAging(item.due_date) : 'N/A' }}
+  </span>
+</ng-template>
+  </p-card>
+</div>
+<app-payment-form></app-payment-form>
+<p-toast></p-toast>

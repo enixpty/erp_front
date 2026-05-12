@@ -1,0 +1,20 @@
+<div class="p-4">
+  <p-card header="Inventario por SKU">
+    <app-customtable
+      [genericCol]="cols"
+      [loaderFunction]="loadInventory"
+      [columnTemplates]="{ 'warehouse_breakdown': warehouseTemplate }">
+    </app-customtable>
+  </p-card>
+</div>
+
+<ng-template #warehouseTemplate let-item>
+  <div class="text-sm">
+    @for (stock of item.stocks; track stock.id) {
+      <div class="flex justify-between gap-2 border-b border-surface-100 py-1">
+        <span>{{ stock.warehouse_name }}:</span>
+        <span class="font-bold">{{ stock.quantity | number:'1.2-2' }}</span>
+      </div>
+    }
+  </div>
+</ng-template>

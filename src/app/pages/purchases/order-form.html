@@ -1,0 +1,97 @@
+<div class="p-4" *ngIf="order()">
+  <p-card class="mb-4">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-surface-800">
+        {{ order().id === 'NUEVA' ? 'Nueva Orden de Compra' : 'Orden de Compra #' + order().id }}
+      </h2>
+      <div class="flex gap-2">
+        <p-button label="Imprimir PDF" icon="pi pi-file-pdf" severity="info" (onClick)="printPDF()" *ngIf="order().status === 'CONFIRMED'"></p-button>
+        <p-button label="Volver" icon="pi pi-arrow-left" severity="secondary" [routerLink]="['/purchases/orders']"></p-button>
+        <p-button label="Guardar" icon="pi pi-save" (onClick)="save()" [disabled]="order().status !== 'DRAFT'"></p-button>
+      </div>
+    </div>
+
+    <!-- Metadatos -->
+    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 bg-surface-50 rounded-lg border border-surface-200">
+      <div *ngIf="order().id !== 'NUEVA'"><p class="text-xs text-surface-500 uppercase">Proveedor</p><p class="font-semibold">{{ order().supplier_name }}</p></div>
+      <div><p class="text-xs text-surface-500 uppercase">Estado</p><p class="font-semibold px-2 py-1 bg-surface-100 inline-block rounded">{{ order().status }}</p></div>
+      <div><p class="text-xs text-surface-500 uppercase">Total</p><p class="text-lg font-bold text-primary">{{ (total || 0) | currency:'USD' }}</p></div>
+      <div><p class="text-xs text-surface-500 uppercase">IVA ({{(taxRate() * 100) | number:'1.0-2'}}%)</p><p class="font-semibold">{{ (taxAmount || 0) | currency:'USD' }}</p></div>
+      <div><p class="text-xs text-surface-500 uppercase">Otros (F/S)</p><p class="font-semibold">{{ ((form.get('freight_cost')?.value || 0) + (form.get('insurance_cost')?.value || 0))   }}</p></div>
+      <div *ngIf="order().id !== 'NUEVA'"><p class="text-xs text-surface-500 uppercase">Fecha Confirm.</p><p class="font-semibold">{{ (order().confirmed_at | date:'dd/MM/yyyy') ?? 'N/A' }}</p></div>
+    </div>
+
+  </p-card>
+
+  <p-card header="Materiales de la Orden">
+    <form [formGroup]="form">
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="flex flex-col">
+                <label class="text-sm font-bold">Flete</label>
+                <p-inputNumber formControlName="freight_cost" mode="currency" currency="USD"></p-inputNumber>
+            </div>
+            <div class="flex flex-col">
+                <label class="text-sm font-bold">Seguro</label>
+                <p-inputNumber formControlName="insurance_cost" mode="currency" currency="USD"></p-inputNumber>
+            </div>
+        </div>
+        <div class="overflow-hidden border border-surface-200 rounded-lg">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-surface-100">
+                    <tr class="text-surface-600">
+                        <th class="p-3">SKU</th>
+                        <th class="p-3">Descripción</th>
+                        <th class="p-3 w-1/6">Cantidad</th>
+                        <th class="p-3 w-1/6">Precio Unit.</th>
+                        <th class="p-3 w-1/6 text-right">Total</th>
+                        <th class="p-3 w-12"></th>
+                    </tr>
+                </thead>
+                <tbody formArrayName="lines">
+                    <tr *ngFor="let line of lines.controls; let i = index" [formGroupName]="i" class="border-t">
+                        <td class="p-3">
+                            <p-autoComplete 
+                                formControlName="sku" 
+                                [suggestions]="filteredSkus()" 
+                                (completeMethod)="searchSku($event)" 
+                                (onSelect)="onSkuSelect($event, line)" 
+                                field="code" 
+                                optionLabel="code"
+                                class="w-full"
+                                [forceSelection]="true"
+                                dataKey="id">
+                                <ng-template let-sku pTemplate="item">
+                                    {{ sku.code }} - {{ sku.name }}
+                                </ng-template>
+                                <ng-template let-sku pTemplate="selectedItem">
+                                    {{ sku.code }}
+                                </ng-template>
+                            </p-autoComplete>
+                        </td>
+
+                        <td class="p-3">
+                            <input pInputText formControlName="description" readonly class="w-full bg-surface-50">
+                        </td>
+                        <td class="p-3">
+                            <p-inputNumber formControlName="quantity" class="w-full"></p-inputNumber>
+                        </td>
+                        <td class="p-3">
+                            <p-inputNumber formControlName="unit_price" mode="currency" currency="USD" class="w-full"></p-inputNumber>
+                        </td>
+                        <td class="p-3 text-right font-bold text-surface-800">
+                            {{ (line.get('quantity')?.value * line.get('unit_price')?.value) | currency:'USD' }}
+                        </td>
+                        <td class="p-3">
+                            <p-button icon="pi pi-trash" severity="danger" [text]="true" (click)="lines.removeAt(i)" [disabled]="order().status !== 'DRAFT'"></p-button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-4">
+            <p-button label="Agregar Material" icon="pi pi-plus" (onClick)="addLine()" [disabled]="order().status !== 'DRAFT'"></p-button>
+        </div>
+    </form>
+  </p-card>
+</div>
+<p-toast></p-toast>

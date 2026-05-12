@@ -1,0 +1,5 @@
+@if(authService.showNavbar() =='authenticated'){ 
+<app-menu-template [pname]="this.authService.full_name() "></app-menu-template>
+  
+} 
+ <router-outlet></router-outlet>

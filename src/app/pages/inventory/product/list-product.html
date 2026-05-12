@@ -1,0 +1,136 @@
+<ng-template #actionButtonsTemplate let-product>
+    <div class="flex gap-2 justify-center">
+        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" pTooltip="Editar" (click)="editProduct(product)"></p-button>
+        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (click)="confirmDelete(product)"></p-button>
+    </div>
+</ng-template>
+
+<ng-template #statusTemplate let-product>
+    <span [class]="product.status === '1' ? 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold' : 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold'">
+        {{ product.status === '1' ? 'Activo' : 'Inactivo' }}
+    </span>
+</ng-template>
+
+<div class="w-auto pt-2 pl-2 pr-2 h-90">     
+    <p-card>
+        <ng-template pTemplate="header">
+            <div class="flex justify-between items-center p-6">
+                <div>
+                    <h2 class="text-xl font-bold">Catálogo de Productos</h2>
+                    <p class="text-sm text-surface-500">Gestión de productos y definiciones generales.</p>
+                </div>
+                <p-button label="Nuevo Producto" icon="pi pi-plus" [rounded]="true" (onClick)="openNew()"></p-button>
+            </div>
+        </ng-template>
+        <div class="pt-4">
+            <app-customtable [genericCol]="cols" #productTable [actionsTemplate]="actionButtonsTemplate" [columnTemplates]="{status: statusTemplate}" [loaderFunction]="productService.getProducts.bind(productService)"></app-customtable>
+        </div>
+    </p-card>
+</div>
+
+<p-dialog [(visible)]="displayModal" [header]="isEdit() ? 'Editar Producto' : 'Nuevo Producto'" [modal]="true" [style]="{ width: '800px' }" [draggable]="false" class="p-fluid">
+<p-tabs value="0">
+    <p-tablist>
+        <p-tab value="0">Información General</p-tab>
+        <p-tab value="1" [disabled]="!isEdit()">SKUs (Variantes)</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+        <p-tabpanel value="0">
+            <form [formGroup]="form" class="flex flex-col gap-4 pt-2">
+                <div class="field">
+                    <label for="name" class="font-bold block mb-2">Nombre del Producto <span class="text-red-500">*</span></label>
+                    <input pInputText id="name" formControlName="name" class="w-full" />
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="field">
+                        <label for="brand" class="font-bold block mb-2">Marca</label>
+                        <p-select [options]="brands()" formControlName="brand" optionLabel="name" optionValue="id" placeholder="Seleccione Marca" [showClear]="true" class="w-full"></p-select>
+                    </div>
+                    <div class="field">
+                        <label for="category" class="font-bold block mb-2">Categoría</label>
+                        <p-select [options]="categories()" formControlName="category" optionLabel="name" optionValue="id" placeholder="Seleccione Categoría" [showClear]="true" class="w-full"></p-select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="description" class="font-bold block mb-2">Descripción</label>
+                    <textarea pInputText id="description" formControlName="description" rows="3" class="w-full resize-none"></textarea>
+                </div>
+                <div class="flex items-center justify-between py-3 border-t border-surface-100 mt-2">
+                    <span class="font-bold">Estado</span>
+                    <p-toggleButton formControlName="status" onLabel="Activo" offLabel="Inactivo" onIcon="pi pi-check" offIcon="pi pi-times" class="w-32 shadow-none"></p-toggleButton>
+                </div>
+            </form>
+        </p-tabpanel>
+        <p-tabpanel value="1">
+            <div class="flex flex-col gap-2">
+                <div class="flex justify-between p-2">
+                    <span class="font-bold text-lg">SKUs registrados</span>
+                    <p-button label="Agregar SKU" icon="pi pi-plus" [rounded]="true" size="small" (onClick)="openSkuForm()"></p-button>
+                </div>
+                @for (sku of skus(); track sku.id) {
+                    <div class="p-4 border border-surface-200 rounded-lg flex justify-between items-center">
+                        <div>
+                            <div class="font-bold">{{ sku.code }} - {{ sku.name }}</div>
+                            <div class="text-sm text-surface-500">Costo: {{ sku.cost_price }} | Precio: {{ sku.sell_price }}</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <p-button icon="pi pi-barcode" [text]="true" severity="info" pTooltip="Gestionar EANs" (onClick)="openEanModal(sku)"></p-button>
+                            <p-button icon="pi pi-trash" [text]="true" severity="danger" (onClick)="deleteSku(sku)"></p-button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </p-tabpanel>
+    </p-tabpanels>
+</p-tabs>
+
+    <div class="flex justify-end gap-3 mt-4 border-t pt-4">
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="displayModal.set(false)"></p-button>
+      <p-button [label]="isEdit() ? 'Actualizar' : 'Guardar'" [loading]="submitting()" [disabled]="form.invalid" (onClick)="save()"></p-button>
+    </div>
+</p-dialog>
+
+<!-- SKU Modal -->
+<p-dialog [(visible)]="displaySkuModal" header="Nueva Variante (SKU)" [modal]="true" [style]="{ width: '400px' }" class="p-fluid">
+    <form [formGroup]="skuForm" class="flex flex-col gap-4">
+        <input pInputText formControlName="code" placeholder="Código SKU" />
+        <input pInputText formControlName="name" placeholder="Nombre de Variante" />
+        <p-inputNumber formControlName="cost_price" placeholder="Costo" mode="currency" currency="USD" locale="en-US" class="w-full"></p-inputNumber>
+        <p-inputNumber formControlName="sell_price" placeholder="Precio Venta" mode="currency" currency="USD" locale="en-US" class="w-full"></p-inputNumber>
+        
+        <div class="grid grid-cols-2 gap-2">
+            <p-inputNumber formControlName="stock_min_override" placeholder="Stock Mín. (Override)" class="w-full"></p-inputNumber>
+            <p-inputNumber formControlName="stock_max_override" placeholder="Stock Máx. (Override)" class="w-full"></p-inputNumber>
+        </div>
+
+        <p-multiselect 
+            [options]="attrValues()" 
+            formControlName="attribute_ids" 
+            optionLabel="value" 
+            optionValue="id"  [appendTo]="'body'"
+            placeholder="Seleccionar Atributos" 
+            class="w-full">
+        </p-multiselect>
+
+        <p-button label="Guardar SKU" (onClick)="saveSku()" [loading]="submittingSku()"></p-button>
+    </form>
+</p-dialog>
+<p-confirmDialog [style]="{width: '350px'}" position="top"></p-confirmDialog>
+<p-toast></p-toast>
+
+<p-dialog [(visible)]="displayEanModal" header="Gestión de Códigos EAN" [modal]="true" [style]="{ width: '400px' }" class="p-fluid">
+    <div class="flex flex-col gap-4">
+        <div class="flex gap-2">
+            <input pInputText placeholder="Nuevo EAN" #eanInput />
+            <p-button icon="pi pi-plus" (onClick)="addEan(eanInput)"></p-button>
+        </div>
+        <div class="flex flex-col gap-2">
+            @for (ean of selectedSku()?.eans; track ean.id) {
+                <div class="flex justify-between items-center p-2 border-b">
+                    <span>{{ ean.code }}</span>
+                    <p-button icon="pi pi-trash" [text]="true" severity="danger" (onClick)="deleteEan(ean)"></p-button>
+                </div>
+            }
+        </div>
+    </div>
+</p-dialog>

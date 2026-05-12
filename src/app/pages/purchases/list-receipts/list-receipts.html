@@ -1,0 +1,17 @@
+<div class="p-4">
+  <p-card header="Recepciones de Mercancía">
+    <app-customtable 
+        [genericCol]="cols" 
+        #recTable 
+        [loaderFunction]="recService.getReceipts.bind(recService)"
+        [actionsTemplate]="actions"> 
+    </app-customtable>
+  </p-card>
+</div>
+
+<ng-template #actions let-rec>
+    <div class="flex gap-2">
+        <p-button icon="pi pi-receipt" pTooltip="Facturar" text severity="success" [routerLink]="['/purchases/bill/new']" [queryParams]="{receiptId: rec.id}"></p-button>
+        <p-button icon="pi pi-eye" pTooltip="Ver Detalle" text severity="info" [routerLink]="['/purchases/receipt-detail', rec.id]"></p-button>
+    </div>
+</ng-template>

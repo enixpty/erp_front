@@ -1,0 +1,12 @@
+<div class="p-4">
+  <p-card header="Notas de Débito">
+    <div class="flex justify-end mb-4">
+      <p-button label="Nueva Nota" icon="pi pi-plus" [routerLink]="['/purchases/debit-notes/new']"></p-button>
+    </div>
+    <app-customtable
+      [genericCol]="cols"
+      [loaderFunction]="loadDebitNotes"
+      titletable="Notas de Débito">
+    </app-customtable>
+  </p-card>
+</div>

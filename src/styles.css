@@ -1,0 +1,70 @@
+@import "tailwindcss";
+@import "tailwindcss-primeui";
+@import "primeicons/primeicons.css";
+
+/* Fondo gris claro global */
+body {
+    background-color: #d2d5d7;
+    margin: 0;
+    min-height: 100vh;
+}
+
+/* Estilos Globales de Menú (PrimeNG) */
+
+/* Menú: Estado normal - Texto blanco */
+.p-menubar .p-menuitem .p-menuitem-link .p-menuitem-text,
+.p-menubar .p-menuitem .p-menuitem-link .p-submenu-icon,
+.p-menubar .p-menuitem .p-menuitem-link {
+    color: #ffffff !important;
+}
+
+/* Menú: Estado Hover/Active - Fondo claro con texto oscuro */
+.p-menubar .p-menuitem .p-menuitem-link:hover,
+.p-menubar .p-menuitem.p-menuitem-active > .p-menuitem-link {
+    background-color: #e9ecef !important;
+    color: #333333 !important;
+}
+
+/* Forzar texto oscuro en hover */
+.p-menubar .p-menuitem .p-menuitem-link:hover .p-menuitem-text,
+.p-menubar .p-menuitem.p-menuitem-active > .p-menuitem-link .p-menuitem-text {
+    color: #333333 !important;
+}
+
+/* Submenú: Fondo azul oscuro y texto blanco */
+.p-menubar .p-submenu-list {
+    background-color: #003366 !important;
+}
+
+.p-menubar .p-submenu-list .p-menuitem .p-menuitem-link {
+    color: #ffffff !important;
+}
+
+.p-menubar .p-submenu-list .p-menuitem .p-menuitem-link:hover {
+    background-color: #004080 !important;
+    color: #ffffff !important;
+}
+
+/* Asegurar que los overlays de PrimeNG (menús desplegables) estén por encima de todo */
+.p-menubar-submenu, .p-menu-overlay, .p-datepicker {
+    z-index: 2000 !important;
+}
+
+:root {
+  /* Primary Brand Colors */
+  --erp-primary-blue: #007bff; /* Professional, reliable, standard blue */
+  --erp-secondary-grey: #6c757d; /* Neutral for secondary actions */
+
+  /* Semantic Colors */
+  --erp-success: #28a745; /* Green for success states */
+  --erp-warning: #ffc107; /* Yellow for warnings */
+  --erp-danger: #dc3545; /* Red for errors */
+  --erp-info: #17a2b8; /* Cyan for informational messages */
+
+  /* Neutrals */
+  --erp-text-dark: #343a40; /* Primary text color */
+  --erp-text-light: #ffffff; /* Text on dark backgrounds */
+  --erp-background-light: #ffffff; /* Main background */
+  --erp-background-subtle: #e9ecef; /* For subtle backgrounds, dividers */
+  --erp-border-color: #ced4da; /* For borders and separators */
+}

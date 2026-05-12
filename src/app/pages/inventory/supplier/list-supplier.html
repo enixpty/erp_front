@@ -1,0 +1,71 @@
+<ng-template #actionButtonsTemplate let-supplier>
+    <div class="flex gap-2 justify-center">
+        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" pTooltip="Editar" (click)="editSupplier(supplier)"></p-button>
+        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (click)="confirmDelete(supplier)"></p-button>
+    </div>
+</ng-template>
+
+<ng-template #statusTemplate let-supplier>
+    <span [class]="supplier.status === '1' ? 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold' : 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold'">
+        {{ supplier.status === '1' ? 'Activo' : 'Inactivo' }}
+    </span>
+</ng-template>
+
+<div class="w-auto pt-2 pl-2 pr-2 h-90">     
+    <p-card>
+        <ng-template pTemplate="header">
+            <div class="flex justify-between items-center p-6">
+                <div>
+                    <h2 class="text-xl font-bold">Gestión de Proveedores</h2>
+                    <p class="text-sm text-surface-500">Administre su catálogo de proveedores.</p>
+                </div>
+                <p-button label="Nuevo Proveedor" icon="pi pi-plus" [rounded]="true" (onClick)="openNew()"></p-button>
+            </div>
+        </ng-template>
+        <div class="pt-4">
+            <app-customtable [genericCol]="cols" #supplierTable [actionsTemplate]="actionButtonsTemplate" [columnTemplates]="{status: statusTemplate}" [loaderFunction]="supplierService.getSuppliers.bind(supplierService)"></app-customtable>
+        </div>
+    </p-card>
+</div>
+
+<p-dialog [(visible)]="displayModal" [header]="isEdit() ? 'Editar Proveedor' : 'Nuevo Proveedor'" [modal]="true" [style]="{ width: '600px' }" [draggable]="false" class="p-fluid">
+  <form [formGroup]="form" class="flex flex-col gap-4 pt-2">
+    <div class="field">
+      <label for="name" class="font-bold block mb-2">Nombre o Razón Social <span class="text-red-500">*</span></label>
+      <input pInputText id="name" formControlName="name" class="w-full" />
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="field">
+            <label for="ruc" class="font-bold block mb-2">R.U.C.</label>
+            <input pInputText id="ruc" formControlName="ruc" class="w-full" />
+        </div>
+        <div class="field">
+            <label for="phone" class="font-bold block mb-2">Teléfono</label>
+            <input pInputText id="phone" formControlName="phone" class="w-full" />
+        </div>
+    </div>
+
+    <div class="field">
+        <label for="email" class="font-bold block mb-2">Email de Contacto</label>
+        <input pInputText id="email" formControlName="email" class="w-full" />
+    </div>
+
+    <div class="field">
+        <label for="address" class="font-bold block mb-2">Dirección Física</label>
+        <textarea pInputText id="address" formControlName="address" rows="3" class="w-full resize-none"></textarea>
+    </div>
+
+    <div class="flex items-center justify-between py-3 border-t border-surface-100 mt-2">
+      <span class="font-bold">Estado del Registro</span>
+      <p-toggleButton formControlName="status" onLabel="Activo" offLabel="Inactivo" onIcon="pi pi-check" offIcon="pi pi-times" class="w-32"></p-toggleButton>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-4">
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="displayModal.set(false)"></p-button>
+      <p-button [label]="isEdit() ? 'Actualizar' : 'Guardar'" [loading]="submitting()" [disabled]="form.invalid" (onClick)="save()"></p-button>
+    </div>
+  </form>
+</p-dialog>
+<p-confirmDialog [style]="{width: '350px'}" position="top"></p-confirmDialog>
+<p-toast></p-toast>

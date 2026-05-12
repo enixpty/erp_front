@@ -1,0 +1,71 @@
+<div class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-6 animate-fade-in">
+        <!-- Header -->
+        <div class="text-center">
+            <div class="mx-auto w-24 h-24 flex items-center justify-center mb-4">
+                <img src="logo.png" alt="Logo" class="w-full h-full object-contain" />
+            </div>
+            <h2 class="text-3xl font-bold text-[#343a40]">Bienvenido</h2>
+            <p class="text-[#6c757d] mt-2">Inicia sesión en tu cuenta</p>
+        </div>
+
+        <!-- Form -->
+        <form class="space-y-4" (ngSubmit)="login()"> 
+            <!-- Email -->
+            <div class="flex flex-col gap-2">
+                <label for="email" class="text-sm font-medium text-[#343a40]">
+                    Correo electrónico
+                </label>
+                <input pInputText 
+                    type="email" 
+                    id="email"  
+                    [(ngModel)]="email"
+                    name="email"
+                    class="w-full border-[#ced4da] focus:ring-[#007bff]"
+                    placeholder="tu@email.com"
+                    [disabled]="loading()"
+                />
+                @if (emailError()) {
+                    <small class="text-[#dc3545] animate-slide-down">{{ emailError() }}</small>
+                }
+            </div>
+
+            <!-- Password -->
+            <div class="flex flex-col gap-2">
+                <label for="password" class="text-sm font-medium text-[#343a40]">
+                    Contraseña
+                </label>
+                <p-password 
+                    id="password" 
+                    [(ngModel)]="password"
+                    name="password"
+                    [toggleMask]="true"
+                    [feedback]="false"
+                    styleClass="w-full"
+                    inputStyleClass="w-full border-[#ced4da] focus:ring-[#007bff]"
+                    placeholder="••••••••"
+                    [disabled]="loading()"
+                />
+                @if (passwordError()) {
+                    <small class="text-[#dc3545] animate-slide-down">{{ passwordError() }}</small>
+                }
+            </div>
+
+            <!-- Remember Me -->
+            <div class="flex items-center gap-2">
+                <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe" id="rememberMe" class="w-4 h-4 text-[#007bff] border-[#ced4da] rounded focus:ring-[#007bff] cursor-pointer">
+                <label for="rememberMe" class="text-sm text-[#6c757d] cursor-pointer select-none">Recordarme</label>
+            </div>
+
+            <!-- Submit Button -->
+            <p-button 
+                type="submit" 
+                [label]="loading() ? 'Iniciando sesión...' : 'Iniciar Sesión'"
+                [disabled]="!formValid()"
+                [icon]="loading() ? 'pi pi-spin pi-spinner' : ''"
+                styleClass="w-full !bg-[#0056b3] !border-[#0056b3] hover:!bg-[#004494] transition-all duration-300"
+            />
+        </form>
+    </div>
+    <p-toast />
+</div>

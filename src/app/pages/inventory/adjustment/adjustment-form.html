@@ -1,0 +1,44 @@
+<div class="p-4">
+  <p-card header="Ajuste de Inventario Universal">
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-2">
+          <label>Tipo de Movimiento</label>
+          <p-select [options]="types" formControlName="movement_type" optionLabel="name" optionValue="id" placeholder="Seleccione Tipo"></p-select>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label>Producto (SKU)</label>
+          <p-select [options]="skus" formControlName="sku" optionLabel="name" optionValue="id" placeholder="Seleccione SKU" [filter]="true"></p-select>
+        </div>
+
+        @if (getSelectedType()?.needs_source) {
+          <div class="flex flex-col gap-2">
+            <label>Bodega de Origen</label>
+            <p-select [options]="warehouses" formControlName="warehouse_source" optionLabel="name" optionValue="id" placeholder="Seleccione Bodega Origen"></p-select>
+          </div>
+        }
+
+        @if (getSelectedType()?.needs_destination) {
+          <div class="flex flex-col gap-2">
+            <label>Bodega de Destino</label>
+            <p-select [options]="warehouses" formControlName="warehouse_destination" optionLabel="name" optionValue="id" placeholder="Seleccione Bodega Destino"></p-select>
+          </div>
+        }
+
+        <div class="flex flex-col gap-2">
+            <label>Cantidad</label>
+            <input pInputText type="number" formControlName="quantity" />
+        </div>
+        <div class="flex flex-col gap-2 md:col-span-2">
+            <label>Notas / Motivo</label>
+            <textarea pTextarea formControlName="notes" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <p-button label="Cancelar" severity="secondary" [routerLink]="['/inventory/movements']"></p-button>
+        <p-button label="Procesar Movimiento" type="submit" [disabled]="form.invalid"></p-button>
+      </div>
+    </form>
+  </p-card>
+</div>
+<p-toast></p-toast>

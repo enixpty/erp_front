@@ -1,0 +1,121 @@
+<p-toast />
+
+<div class="w-auto pt-2 pl-2 pr-2 h-90">
+    <p-card header="Gestión de Roles y Menús">
+        <div class="grid grid-cols-12 gap-4 h-full">
+            
+            <!-- Panel de Roles -->
+            <div class="col-span-4">
+                <p-card header="Roles Disponibles" styleClass="h-full">
+                    <div class="space-y-2">
+                        @for (role of roles(); track role.id) {
+                            <div class="p-3 border rounded-lg cursor-pointer transition-all hover:bg-blue-50"
+                                 [class.bg-blue-100]="selectedRole()?.id === role.id"
+                                 [class.border-blue-300]="selectedRole()?.id === role.id"
+                                 (click)="selectRole(role)">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">{{ role.name }}</h4>
+                                        <p class="text-sm text-gray-500">
+                                            <span [class]="role.status ? 'text-green-600' : 'text-red-600'">
+                                                {{ role.status ? 'Activo' : 'Inactivo' }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                    @if (selectedRole()?.id === role.id) {
+                                        <div class="text-blue-600">
+                                            <i class="pi pi-check-circle"></i>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </p-card>
+            </div>
+
+            <!-- Panel de Asignación -->
+            @if (selectedRole()) {
+                <div class="col-span-8">
+                    <p-card [header]="'Menús para: ' + selectedRole()?.name" styleClass="h-full">
+                        
+                        <!-- Botones de acción -->
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex gap-2">
+                                <p-button 
+                                    label="Guardar Cambios" 
+                                    icon="pi pi-save" 
+                                    styleClass="p-button-success p-button-sm"
+                                    (click)="saveMenuAssignments()"
+                                    [disabled]="!hasChanges()">
+                                </p-button>
+                                
+                                <p-button 
+                                    label="Seleccionar Todos" 
+                                    icon="pi pi-check" 
+                                    styleClass="p-button-secondary p-button-sm"
+                                    (click)="selectAllMenus()">
+                                </p-button>
+                                
+                                <p-button 
+                                    label="Deseleccionar Todos" 
+                                    icon="pi pi-times" 
+                                    styleClass="p-button-secondary p-button-sm"
+                                    (click)="deselectAllMenus()">
+                                </p-button>
+                            </div>
+                            
+                            <div class="text-sm text-gray-600">
+                                {{ getSelectedMenusCount() }} de {{ menus().length }} menús seleccionados
+                            </div>
+                        </div>
+
+                        <!-- Lista de Menús -->
+                        <div class="space-y-2 max-h-96 overflow-y-auto">
+                            @for (menu of menus(); track menu.id) {
+                                <div class="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-all">
+                                    
+                                    <p-checkbox 
+                                        [binary]="true"
+                                        [(ngModel)]="menu.assigned"
+                                        (ngModelChange)="onMenuToggle(menu, $event)"
+                                        class="mr-3">
+                                    </p-checkbox>
+                                    
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-3">
+                                            <i [class]="menu.icon" class="text-blue-600"></i>
+                                            <div>
+                                                <h5 class="font-medium text-gray-800">{{ menu.name }}</h5>
+                                                <p class="text-sm text-gray-500">{{ menu.path }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-sm">
+                                        <span [class]="menu.active ? 'text-green-600' : 'text-red-600'">
+                                            {{ menu.active ? 'Activo' : 'Inactivo' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </p-card>
+                </div>
+            } @else {
+                <!-- Panel de instrucciones cuando no hay rol seleccionado -->
+                <div class="col-span-8">
+                    <p-card header="Instrucciones" styleClass="h-full">
+                        <div class="text-center py-8">
+                            <i class="pi pi-info-circle text-6xl text-blue-300 mb-4"></i>
+                            <h3 class="text-xl font-semibold text-gray-700 mb-2">Selecciona un Rol</h3>
+                            <p class="text-gray-500">
+                                Selecciona un rol de la lista de la izquierda para gestionar sus permisos de menú.
+                            </p>
+                        </div>
+                    </p-card>
+                </div>
+            }
+        </div>
+    </p-card>
+</div>

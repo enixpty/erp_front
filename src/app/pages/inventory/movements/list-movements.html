@@ -1,0 +1,20 @@
+<div class="p-4">
+  <p-card header="Historial de Movimientos de Inventario">
+    <app-customtable
+      [genericCol]="cols"
+      [loaderFunction]="loadMovements"
+      [columnTemplates]="{ 'movement_type_name': typeTemplate, 'created': dateTemplate }">
+    </app-customtable>
+  </p-card>
+</div>
+
+<ng-template #typeTemplate let-item>
+  <p-tag 
+    [value]="item.movement_type_name" 
+    [severity]="getSeverity(item.movement_type_direction)">
+  </p-tag>
+</ng-template>
+
+<ng-template #dateTemplate let-item>
+  {{ item.created | date:'dd/MM/yyyy HH:mm' }}
+</ng-template>

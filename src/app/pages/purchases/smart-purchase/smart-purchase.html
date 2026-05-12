@@ -1,0 +1,15 @@
+<div class="p-4">
+  <p-card header="Compras Inteligentes (Reabastecimiento)">
+    <div class="flex justify-end mb-4">
+        <p-button label="Generar Órdenes de Compra" icon="pi pi-check" severity="success" (click)="processPurchase()" [loading]="loading"></p-button>
+    </div>
+    
+    <app-customtable
+      [genericCol]="cols"
+      [loaderFunction]="loadLowStock"
+      [selectionMode]="'multiple'"
+      [(selection)]="selectedSkus">
+    </app-customtable>
+  </p-card>
+</div>
+<p-toast></p-toast>

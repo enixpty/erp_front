@@ -1,0 +1,97 @@
+<p-toast />    
+ 
+<div class="w-auto pt-2 pl-2 pr-2 h-90">    
+    <p-card header="Crear Nuevo Usuario" [ngClass]="['mx-auto', 'w-[60%]']" >
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="first_name" class="block text-sm font-medium mb-1">Nombre</label>
+                <input pInputText id="first_name" class="flex-auto w-full"  
+                        [(ngModel)]="newUser().first_name"
+                        autocomplete="off" />
+                @if (isFirstRequired()) {
+                    <p-message severity="error" size="small" 
+                        variant="simple">El Nombre es requerido</p-message>
+                }
+            </div>
+            
+            <div> 
+                <label for="last_name" class="block text-sm font-medium mb-1">Apellido</label>
+                <input pInputText id="last_name" class="flex-auto w-full"  
+                        [(ngModel)]="newUser().last_name" autocomplete="off" />
+                @if (isLastRequired()) {
+                    <p-message severity="error" size="small" 
+                        variant="simple">El Apellido es requerido</p-message>
+                }
+            </div>
+            
+            <div> 
+                <label for="active" class="block text-sm font-medium mb-1">Estado</label>
+                <p-select [options]="status" [(ngModel)]="selected"
+                    class="flex-auto w-full"  
+                    optionLabel="description" placeholder="Seleccionar" />
+                @if (isStatusRequired()) {
+                    <p-message severity="error" size="small" 
+                        variant="simple">El Estado es requerido</p-message>
+                }
+            </div>
+
+            <div> 
+                <label for="role" class="block text-sm font-medium mb-1">Rol</label>
+                <p-select [options]="roles" [(ngModel)]="selectedRole"
+                    class="flex-auto w-full"  
+                    optionLabel="name" placeholder="Seleccionar rol" />
+                @if (isRoleRequired()) {
+                    <p-message severity="error" size="small" 
+                        variant="simple">El Rol es requerido</p-message>
+                }
+            </div>
+            
+            <div> 
+                <label for="email" class="block text-sm font-medium mb-1">Email</label>
+                <input pInputText id="email" class="flex-auto w-full" 
+                        [(ngModel)]="newUser().email" autocomplete="off" />
+                @if (isEmailValid()) {
+                    <p-message severity="error" size="small" 
+                        variant="simple">El Email es requerido</p-message>
+                }
+            </div>
+
+            <div> 
+                <label for="password" class="block text-sm font-medium mb-1">Password</label>
+                <input pInputText id="password" class="flex-auto w-full" type="password"
+                        [(ngModel)]="txtpasswd" autocomplete="off" />
+                @if (isPasswdRequired()) {
+                    <p-message severity="error" size="small" 
+                        variant="simple">Password es requerido y debe tener minimo 6 caracteres</p-message>
+                }
+            </div>
+
+            <div> 
+                <label for="rpassword" class="block text-sm font-medium mb-1">Repetir Password</label>
+                <input pInputText id="rpassword" class="flex-auto w-full" type="password"
+                        [(ngModel)]="txtrpasswd" autocomplete="off" />
+                @if (isRpasswdRequired()) {
+                    <p-message severity="error" size="small" 
+                        variant="simple">Password es requerido, debe tener minimo 6 caracteres y igual al password</p-message>
+                }
+            </div>
+        </div>
+
+    <div class="flex justify-end gap-4 pt-3">
+        <p-button 
+            label="Crear Usuario" 
+            icon="pi pi-check" 
+            styleClass="p-button-sm p-button-success" 
+            (click)="create()" 
+            [disabled]="isFormInvalid()">
+        </p-button>
+    
+        <p-button 
+            label="Limpiar" 
+            icon="pi pi-refresh" 
+            styleClass="p-button-sm p-button-secondary"
+            (click)="reset()">
+        </p-button>
+    </div>
+    </p-card>
+</div>

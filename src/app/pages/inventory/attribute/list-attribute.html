@@ -1,0 +1,47 @@
+<ng-template #attrActions let-attr>
+    <div class="flex gap-2">
+        <p-button icon="pi pi-pencil" [text]="true" (click)="editAttr(attr)"></p-button>
+        <p-button icon="pi pi-trash" [text]="true" severity="danger" (click)="deleteAttr(attr)"></p-button>
+    </div>
+</ng-template>
+
+<ng-template #valActions let-val>
+    <div class="flex gap-2">
+        <p-button icon="pi pi-pencil" [text]="true" (click)="editVal(val)"></p-button>
+        <p-button icon="pi pi-trash" [text]="true" severity="danger" (click)="deleteVal(val)"></p-button>
+    </div>
+</ng-template>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+    <!-- Atributos -->
+    <p-card header="Atributos (Ej: Color, Talla)">
+        <p-button label="Nuevo Atributo" icon="pi pi-plus" class="mb-4" (onClick)="openNewAttr()"></p-button>
+        <app-customtable [genericCol]="attrCols" #attrTable [actionsTemplate]="attrActions" [loaderFunction]="attrService.getAttributes.bind(attrService)"></app-customtable>
+    </p-card>
+
+    <!-- Valores -->
+    <p-card header="Valores de Atributos">
+        <p-button label="Nuevo Valor" icon="pi pi-plus" class="mb-4" (onClick)="openNewVal()"></p-button>
+        <app-customtable [genericCol]="valCols" #valTable [actionsTemplate]="valActions" [loaderFunction]="attrService.getAttributeValues.bind(attrService)"></app-customtable>
+    </p-card>
+</div>
+
+<!-- Modal Atributo -->
+<p-dialog [(visible)]="displayAttrModal" header="Atributo" [modal]="true" [style]="{ width: '400px' }" class="p-fluid">
+    <form [formGroup]="attrForm" class="flex flex-col gap-4">
+        <input pInputText formControlName="name" placeholder="Nombre del Atributo" />
+        <p-toggleButton formControlName="status" onLabel="Activo" offLabel="Inactivo"></p-toggleButton>
+        <p-button label="Guardar" (onClick)="saveAttr()" [loading]="submitting()"></p-button>
+    </form>
+</p-dialog>
+
+<!-- Modal Valor -->
+<p-dialog [(visible)]="displayValModal" header="Valor de Atributo" [modal]="true" [style]="{ width: '400px' }" class="p-fluid">
+    <form [formGroup]="valForm" class="flex flex-col gap-4">
+        <p-select [options]="attributes()" formControlName="attribute" optionLabel="name" optionValue="id" placeholder="Seleccione Atributo"></p-select>
+        <input pInputText formControlName="value" placeholder="Valor (ej: Rojo, XL)" />
+        <p-toggleButton formControlName="status" onLabel="Activo" offLabel="Inactivo"></p-toggleButton>
+        <p-button label="Guardar" (onClick)="saveVal()" [loading]="submitting()"></p-button>
+    </form>
+</p-dialog>
+<p-toast></p-toast>

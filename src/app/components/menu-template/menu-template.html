@@ -1,0 +1,49 @@
+ 
+
+ <header class="sticky top-0 z-[1000] w-full" style="background-color: #003366"  >
+   @if (hasMenus()) {
+     <p-menubar [model]="items()"   
+         styleClass="!border-[#003366] !bg-[#003366] !text-white"
+         style="box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+      <ng-template #start>
+            <div class="pl-4">
+              <img src="logo.png" width="35" height="35" />
+            </div>
+     </ng-template>
+     <ng-template pTemplate="end">
+         <div class="flex align-items-center"> 
+             <p-avatar 
+                 [label]= this.initial()
+                 size="normal"
+                 shape="circle"
+                 (click)="toggleMenu($event)" 
+                 styleClass="cursor-pointer ml-3 !bg-white !text-[#003366]">
+             </p-avatar> 
+             <p-menu #profileMenu [model]="profileItems" [popup]="true"></p-menu>
+         </div>
+     </ng-template> 
+     </p-menubar>
+   } @else {
+     <div class="flex justify-between items-center p-4" style="background-color: #003366;">
+       <div class="flex items-center gap-3">
+         <img src="logo.png" width="35" height="35" />
+         <div class="bg-blue-900 border-l-4 border-blue-400 text-white p-3 rounded">
+           <p class="font-semibold">
+             <i class="pi pi-exclamation-triangle mr-2"></i>
+             No tienes opciones de menú asignadas. Contacta al administrador.
+           </p>
+         </div>
+       </div>
+       <div class="flex items-center"> 
+         <p-avatar 
+             [label]= this.initial()
+             size="normal"
+             shape="circle"
+             (click)="toggleMenu($event)" 
+             styleClass="cursor-pointer ml-3 !bg-white !text-[#003366]">
+         </p-avatar> 
+         <p-menu #profileMenu [model]="profileItems" [popup]="true"></p-menu>
+       </div>
+     </div>
+   }
+ </header>

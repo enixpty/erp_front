@@ -1,0 +1,21 @@
+<div class="p-4">
+  <p-card header="Existencias por Bodega">
+    <app-customtable
+      [genericCol]="cols"
+      [loaderFunction]="loadStock"
+      [columnTemplates]="{ 'quantity': qtyTemplate }">
+    </app-customtable>
+  </p-card>
+</div>
+
+<ng-template #qtyTemplate let-item>
+  <div class="flex items-center gap-2">
+    <p-tag 
+      [value]="(item.quantity | number:'1.2-2') ?? ''" 
+      [severity]="getSeverity(item.quantity)">
+    </p-tag>
+    @if (item.quantity <= 0) {
+      <span class="text-xs text-red-500 font-bold">¡SIN STOCK!</span>
+    }
+  </div>
+</ng-template>

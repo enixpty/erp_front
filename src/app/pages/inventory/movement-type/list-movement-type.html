@@ -1,0 +1,32 @@
+<div class="p-4">
+  <p-card>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">Tipos de Movimiento</h2>
+      <p-button label="Nuevo Tipo" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+    </div>
+    <app-customtable [genericCol]="cols" #mtTable [actionsTemplate]="actionTemplate" [loaderFunction]="mtService.getMovementTypes.bind(mtService)"></app-customtable>
+  </p-card>
+</div>
+
+<ng-template #actionTemplate let-mt>
+  <div class="flex gap-2">
+    <p-button icon="pi pi-pencil" [text]="true" (click)="edit(mt)"></p-button>
+    <p-button icon="pi pi-trash" [text]="true" severity="danger" (click)="confirmDelete(mt)"></p-button>
+  </div>
+</ng-template>
+
+<p-dialog [(visible)]="displayModal" [header]="isEdit() ? 'Editar Tipo' : 'Nuevo Tipo'" [modal]="true" [style]="{width: '400px'}">
+  <form [formGroup]="form" class="flex flex-col gap-4 p-fluid">
+    <input pInputText formControlName="name" placeholder="Nombre" />
+    <p-select [options]="directions" formControlName="direction" placeholder="Dirección"></p-select>
+    <div class="flex items-center gap-2">
+        <p-checkbox formControlName="needs_source" [binary]="true"></p-checkbox> <label>Requiere Origen</label>
+    </div>
+    <div class="flex items-center gap-2">
+        <p-checkbox formControlName="needs_destination" [binary]="true"></p-checkbox> <label>Requiere Destino</label>
+    </div>
+    <p-button label="Guardar" (onClick)="save()"></p-button>
+  </form>
+</p-dialog>
+<p-confirmDialog />
+<p-toast />

@@ -1,0 +1,79 @@
+        <p-table #dt [value]=this.genericData() 
+            [paginator]="true"
+            [rows]="10"  [tableStyle]="{'min-width': '50rem'}"
+            [resizableColumns]="true" 
+            [scrollable]="true"
+            paginatorPosition="bottom"
+            [showCurrentPageReport]="true"
+            [totalRecords]="this.totalCount()"
+            [lazy]="true"  
+            (onLazyLoad)="loadRegistros($event)"
+            currentPageReportTemplate="{first}-{last} de {totalRecords}"
+            [rowHover]="true"
+            dataKey="id"  
+            [rowsPerPageOptions]="[10, 25, 40]" 
+            styleClass="p-datatable-sm"
+            [selection]="selection"
+            (selectionChange)="onSelectionChange($event)"
+            [selectionMode]="selectionMode"
+        >
+        <ng-template pTemplate="paginatorright">
+            <div class="flex justify-content-end">
+                <p-button 
+                    icon="pi pi-refresh" 
+                    styleClass="p-button-rounded p-button-text" 
+                    (click)="onRefresh()" 
+                    pTooltip="Actualizar datos" 
+                    tooltipPosition="bottom">
+                </p-button>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                @if (selectionMode === 'multiple') {
+                    <th style="width: 3rem">
+                        <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                    </th>
+                }
+                @for( col of this.genericCol; track col.field){
+                    <th [pSortableColumn]="col.field">
+                        <div class="flex items-center gap-2">
+                            {{col.header}}
+                            @if(col.order) {<p-sortIcon [field]="col.field" /> } 
+                            @if(col.filter){
+                                <p-columnFilter type="text" [field]="col.field" display="menu" class="ml-auto" />
+                            }
+                        </div>
+                    </th>
+                }
+                @if (actionsTemplate) {
+                    <th>Acciones</th>
+                }
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+            <tr>
+                @if (selectionMode === 'multiple') {
+                    <td>
+                        <p-tableCheckbox [value]="item"></p-tableCheckbox>
+                    </td>
+                }
+                @for( col of this.genericCol; track col.field){
+                <td>
+                    @if (col.field === 'action' && actionsTemplate) {
+                        <ng-container *ngTemplateOutlet="actionsTemplate; context: {$implicit: item}">
+                        </ng-container>
+                    } @else if (col.lval) {
+                        {{ getLvalName(item, col) }}
+                    } @else if (columnTemplates && columnTemplates[col.field]) {
+                        <ng-container *ngTemplateOutlet="columnTemplates[col.field]; context: {$implicit: item}">
+                        </ng-container>
+                    } @else {
+                        {{ item[col.field] }}
+                    }
+                </td>
+                }
+            </tr>
+        </ng-template>
+    </p-table>

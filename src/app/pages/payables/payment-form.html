@@ -1,0 +1,14 @@
+<p-dialog [(visible)]="visible" header="Registrar Pago" [modal]="true" [style]="{width: '400px'}">
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <div class="p-fluid">
+        <div class="field mb-3">
+            <label>Monto a Pagar</label>
+            <p-inputNumber formControlName="amount" mode="currency" currency="USD" class="w-full"></p-inputNumber>
+        </div>
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancelar" severity="secondary" (onClick)="visible = false"></p-button>
+            <p-button label="Confirmar Pago" type="submit" severity="success" [disabled]="form.invalid"></p-button>
+        </div>
+    </div>
+  </form>
+</p-dialog>

@@ -1,0 +1,47 @@
+<p-toast />
+
+
+<div class="w-auto pt-2 pl-2 pr-2 h-90">    
+    <p-card header="Crear Nuevo Rol" [ngClass]="['mx-auto', 'w-[60%]']" >
+        <div class=" p-8 rounded-lg ">      
+        <div class="col-span-2">
+            <label for="name" class="font-semibold w-24">Nombre</label>
+            <input pInputText id="name" class="flex-auto w-full"  
+                    [(ngModel)]="newRole().name"
+                    autocomplete="off" />
+            @if (isNameRequired()) {
+                <p-message severity="error" size="small" 
+                    variant="simple">El Nombre es requerido</p-message>
+            }
+        </div>
+        
+        <div class="col-span-4 pt-2"> 
+            <label for="active" class="font-semibold w-24">Estado</label>
+            <p-select [options]="status" [(ngModel)]="selected"
+                class="flex-auto w-full"  
+                optionLabel="description" placeholder="Seleccionar" />
+            @if (isStatusRequired()) {
+                <p-message severity="error" size="small" 
+                    variant="simple">El Estado es requerido</p-message>
+            }
+        </div> 
+
+        </div>
+        <div class="flex justify-end gap-4 pt-3">
+            <p-button 
+                label="Crear Rol" 
+                icon="pi pi-check" 
+                styleClass="p-button-sm p-button-success" 
+                (click)="create()" 
+                [disabled]="isFormInvalid()">
+            </p-button>
+        
+            <p-button 
+                label="Limpiar" 
+                icon="pi pi-refresh" 
+                styleClass="p-button-sm p-button-secondary"
+                (click)="reset()">
+            </p-button>
+        </div> 
+    </p-card>
+</div>

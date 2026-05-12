@@ -1,0 +1,17 @@
+<div class="p-4">
+  <p-card>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">Facturas de Proveedor</h2>
+      <!-- El botón de Nueva Factura se quitó de aquí porque requiere una Recepción previa -->
+    </div>
+    <app-customtable
+      [genericCol]="cols"
+      [loaderFunction]="loadInvoices"
+      [actionsTemplate]="actions"
+      titletable="Facturas">
+      <ng-template #actions let-item>
+        <p-button label="PDF" icon="pi pi-file-pdf" severity="info" text (onClick)="printPDF(item.id)"></p-button>
+      </ng-template>
+    </app-customtable>
+  </p-card>
+</div>

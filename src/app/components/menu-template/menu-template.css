@@ -1,0 +1,5 @@
+/* Estilos específicos de menu-template */
+.p-menubar {
+    background-color: transparent !important;
+    border: none !important;
+}

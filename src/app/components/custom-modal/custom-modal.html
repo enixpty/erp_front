@@ -1,0 +1,6 @@
+    <p-dialog [header]="this.InputHeader" [modal]="true" 
+        closable="false"
+        [visible]="this.InputVisible" [style]="{ width: '25rem' }">
+      <ng-container *ngTemplateOutlet="actionsTemplate;">
+      </ng-container>
+    </p-dialog>

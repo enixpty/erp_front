@@ -1,0 +1,26 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Customtable } from '@src/app/components/customTable/customtable';
+import { VendorReturnService } from '@src/app/services/vendor-return.service';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { RouterLink } from '@angular/router';
+
+@Component({
+  selector: 'app-list-return',
+  standalone: true,
+  imports: [CommonModule, Customtable, ButtonModule, CardModule, RouterLink],
+  templateUrl: './list-return.html'
+})
+export class ListReturnComponent {
+  private returnService = inject(VendorReturnService);
+  
+  cols = [
+    { field: 'id', header: 'ID' },
+    { field: 'receipt', header: 'ID Recepción' },
+    { field: 'reason', header: 'Motivo' },
+    { field: 'return_date', header: 'Fecha' }
+  ];
+
+  loadReturns = (params: any) => this.returnService.getReturns(params);
+}

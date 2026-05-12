@@ -1,0 +1,74 @@
+<ng-template #actionButtonsTemplate let-category>
+    <div class="flex gap-2 justify-center">
+        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" pTooltip="Editar" (click)="editCategory(category)"></p-button>
+        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (click)="confirmDelete(category)"></p-button>
+    </div>
+</ng-template>
+
+<ng-template #statusTemplate let-category>
+    <span [class]="category.status === '1' ? 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold' : 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold'">
+        {{ category.status === '1' ? 'Activo' : 'Inactivo' }}
+    </span>
+</ng-template>
+
+<div class="w-auto pt-2 pl-2 pr-2 h-90">     
+    <p-card>
+        <ng-template pTemplate="header">
+            <div class="flex justify-between items-center p-6">
+                <div>
+                    <h2 class="text-xl font-bold">Gestión de Categorías</h2>
+                    <p class="text-sm text-surface-500">Administre el catálogo de categorías.</p>
+                </div>
+                <p-button label="Nueva Categoría" icon="pi pi-plus" [rounded]="true" (onClick)="openNew()"></p-button>
+            </div>
+        </ng-template>
+        <div class="pt-4">
+            <app-customtable [genericCol]="cols" #categoryTable [actionsTemplate]="actionButtonsTemplate" [columnTemplates]="{status: statusTemplate}" [loaderFunction]="categoryService.getCategories.bind(categoryService)"></app-customtable>
+        </div>
+    </p-card>
+</div>
+
+<p-dialog [(visible)]="displayModal" [header]="isEdit() ? 'Editar Categoría' : 'Nueva Categoría'" [modal]="true" [style]="{ width: '450px' }" [draggable]="false" class="p-fluid">
+  <form [formGroup]="form" class="flex flex-col gap-5 pt-2">
+    <div class="field">
+      <label for="name" class="font-bold block mb-2">Nombre <span class="text-red-500">*</span></label>
+      <input pInputText id="name" formControlName="name" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label for="parent" class="font-bold block mb-2">Categoría Padre</label>
+      <p-select 
+        [options]="categories()" 
+        formControlName="parent" 
+        optionLabel="name" 
+        optionValue="id" 
+        placeholder="Seleccione una categoría padre"
+        [showClear]="true"
+        class="w-full">
+      </p-select>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div class="field">
+            <label for="stock_min_default" class="font-bold block mb-2">Stock Mín. (Defecto)</label>
+            <input pInputText type="number" id="stock_min_default" formControlName="stock_min_default" class="w-full" />
+        </div>
+        <div class="field">
+            <label for="stock_max_default" class="font-bold block mb-2">Stock Máx. (Defecto)</label>
+            <input pInputText type="number" id="stock_max_default" formControlName="stock_max_default" class="w-full" />
+        </div>
+    </div>
+
+    <div class="flex items-center justify-between py-4 border-t border-surface-100 mt-4">
+      <span class="font-bold">Estado</span>
+      <p-toggleButton formControlName="status" onLabel="Activo" offLabel="Inactivo" onIcon="pi pi-check" offIcon="pi pi-times" class="w-32 shadow-none"></p-toggleButton>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-6">
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="displayModal.set(false)"></p-button>
+      <p-button [label]="isEdit() ? 'Actualizar' : 'Guardar'" [loading]="submitting()" [disabled]="form.invalid" (onClick)="save()"></p-button>
+    </div>
+  </form>
+</p-dialog>
+<p-confirmDialog [style]="{width: '350px'}" position="top"></p-confirmDialog>
+<p-toast></p-toast>

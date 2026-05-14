@@ -1,11 +1,13 @@
-export interface User {  
-    username : string ,
-    email: string ,
-    first_name: string ,
-    last_name: string ,  
+export interface User {
+    id: number;
+    company_id: number;
+    first_name: string;
+    last_name: string;
+    username: string;
+    email: string;
 }
 
 export interface LoginUser {
-    password: string
-    email: string
+    email: string;
+    password: string;
 }

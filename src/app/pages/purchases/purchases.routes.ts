@@ -64,6 +64,10 @@ export const purchasesRoutes: Routes = [
         component: ListReturnComponent
     },
     {
+        path: 'return/:id',
+        component: ReturnFormComponent
+    },
+    {
         path: 'return/new',
         component: ReturnFormComponent
     }

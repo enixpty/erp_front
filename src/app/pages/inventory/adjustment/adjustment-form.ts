@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -27,6 +27,7 @@ export class AdjustmentFormComponent implements OnInit {
   private msg = inject(MessageService);
   private skuService = inject(SkuService);
   private whService = inject(WarehouseService);
+  private cd = inject(ChangeDetectorRef);
 
   form: FormGroup = this.fb.group({
     sku: [null, Validators.required],
@@ -42,9 +43,18 @@ export class AdjustmentFormComponent implements OnInit {
   types: any[] = [];
 
   ngOnInit() {
-    this.skuService.getSkus({}).subscribe(data => this.skus = data.results || data);
-    this.whService.getWarehouses({}).subscribe(data => this.warehouses = data.results || data);
-    this.http.get<any>(`${environment.apiUrl}/api/inventory/movement-types/`).subscribe(data => this.types = data.results || data);
+    this.skuService.getSkus({}).subscribe(data => {
+        this.skus = data.results || data;
+        this.cd.detectChanges();
+    });
+    this.whService.getWarehouses({}).subscribe(data => {
+        this.warehouses = data.results || data;
+        this.cd.detectChanges();
+    });
+    this.http.get<any>(`${environment.apiUrl}/api/inventory/movement-types/`).subscribe(data => {
+        this.types = data.results || data;
+        this.cd.detectChanges();
+    });
   }
 
   save() {

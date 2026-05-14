@@ -20,4 +20,8 @@ export class VendorInvoiceService {
   downloadInvoicePDF(id: number): Observable<Blob> {
     return this.http.get(`${this.url}${id}/pdf/`, { responseType: 'blob' });
   }
+
+  changeStatus(id: number, status: string): Observable<any> {
+    return this.http.post(`${this.url}${id}/change_status/`, { status });
+  }
 }

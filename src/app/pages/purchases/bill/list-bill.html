@@ -9,9 +9,17 @@
       [loaderFunction]="loadInvoices"
       [actionsTemplate]="actions"
       titletable="Facturas">
-      <ng-template #actions let-item>
-        <p-button label="PDF" icon="pi pi-file-pdf" severity="info" text (onClick)="printPDF(item.id)"></p-button>
-      </ng-template>
+<ng-template #actions let-item>
+    <div class="flex gap-1 justify-center" style="width: 140px;">
+        <p-button icon="pi pi-file-pdf" severity="secondary" text size="small" pTooltip="Ver PDF" (onClick)="printPDF(item.id)"></p-button>
+        @if (item.status === 'PENDING') {
+            <p-button icon="pi pi-send" severity="secondary" size="small" pTooltip="Enviar a Validar" (onClick)="changeStatus(item, 'PENDING_VALIDATION')"></p-button>
+        }
+        @if (item.status === 'PENDING_VALIDATION') {
+            <p-button icon="pi pi-check" severity="success" size="small" pTooltip="Validar" (onClick)="changeStatus(item, 'VALIDATED')"></p-button>
+        }
+    </div>
+</ng-template>
     </app-customtable>
   </p-card>
 </div>

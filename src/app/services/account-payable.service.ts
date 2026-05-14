@@ -12,4 +12,8 @@ export class AccountPayableService {
   getAccountsPayable(params: any): Observable<any> {
     return this.http.get<any>(this.url, { params });
   }
+
+  getAgingReport(): Observable<any> {
+    return this.http.get<any>(`${this.url}aging_report/`);
+  }
 }

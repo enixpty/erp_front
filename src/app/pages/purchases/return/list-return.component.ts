@@ -19,7 +19,8 @@ export class ListReturnComponent {
     { field: 'id', header: 'ID' },
     { field: 'receipt', header: 'ID Recepción' },
     { field: 'reason', header: 'Motivo' },
-    { field: 'return_date', header: 'Fecha' }
+    { field: 'return_date', header: 'Fecha' },
+    { field: 'action', header: 'Acciones' }
   ];
 
   loadReturns = (params: any) => this.returnService.getReturns(params);

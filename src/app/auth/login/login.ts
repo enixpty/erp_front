@@ -60,7 +60,7 @@ export class Login {
 
   login(){
     if (this.formValid()) {
-      this.loading.set(true);
+      setTimeout(() => this.loading.set(true));
       let data : LoginUser = {
         email: this.email(),
         password: this.password()

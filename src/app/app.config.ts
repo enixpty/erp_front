@@ -8,9 +8,11 @@ import { routes } from './app.routes';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { loggingInterceptor } from '@auth/interceptors/loggins.interceptor';
 import { authInterceptor } from '@auth/interceptors/auth.interceptor';
+import { MessageService } from 'primeng/api';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    MessageService,
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection( ),
     provideRouter(routes),

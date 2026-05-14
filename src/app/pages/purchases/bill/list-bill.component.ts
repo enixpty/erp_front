@@ -27,6 +27,19 @@ export class ListBillComponent {
 
   loadInvoices = (params: any) => this.invoiceService.getInvoices(params);
 
+  changeStatus(invoice: any, status: string) {
+    console.log('Cambiando estado de factura:', invoice.id, 'a:', status);
+    this.invoiceService.changeStatus(invoice.id, status).subscribe({
+      next: () => {
+        console.log('Estado actualizado con éxito');
+        // Aquí forzamos la actualización. Como no tenemos acceso directo a dt,
+        // una forma rápida es recargar la página o disparar una recarga del servicio.
+        window.location.reload();
+      },
+      error: (err) => console.error('Error al cambiar estado:', err)
+    });
+  }
+
   printPDF(id: number) {
     this.invoiceService.downloadInvoicePDF(id).subscribe(blob => {
       const url = window.URL.createObjectURL(blob);

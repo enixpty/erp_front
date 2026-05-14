@@ -22,6 +22,9 @@ export class AuthService {
     public profile_name = computed( ()=> this._user())
     public full_name = signal<string>('')
     public user_menus = signal<any[]>([])
+    
+    public user_id = computed(() => this._user()?.id);
+    public user_cia = computed(() => this._user()?.company_id);
 
     constructor(private router: Router){
     // Verificar al iniciar
@@ -75,6 +78,15 @@ export class AuthService {
               let nom = resp.first_name + ' ' + resp.last_name 
               this.full_name.set(nom)
               
+              this._user.set({
+                id: (resp as any).id,
+                company_id: (resp as any).company_id,
+                first_name: resp.first_name,
+                last_name: resp.last_name,
+                email: resp.email,
+                username: (resp as any).username || ''
+              });
+
               // Guardar los menús del usuario
               if (resp.menus) {
                 this.user_menus.set(resp.menus);
@@ -99,8 +111,10 @@ export class AuthService {
       this._authStatus.set('authenticated')
      
        this._user.set({
+         id: (resp as any).id,
+         company_id: (resp as any).company_id,
          first_name :  resp.first_name,
-         username: "",
+         username: (resp as any).username || "",
          email: resp.email,
          last_name: resp.last_name
        });

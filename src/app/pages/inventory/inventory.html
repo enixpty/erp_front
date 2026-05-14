@@ -1,1 +1,10 @@
-<p>inventory works!</p>
+<div class="grid p-4 gap-4">
+  <div class="col-12 md:col-6">
+    <p-card header="Distribución de Valor de Inventario por Bodega">
+      <p-chart type="pie" [data]="chartData"></p-chart>
+    </p-card>
+  </div>
+  <div class="col-12">
+    <app-list-stock-levels></app-list-stock-levels>
+  </div>
+</div>

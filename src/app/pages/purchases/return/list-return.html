@@ -3,7 +3,16 @@
     <app-customtable
       [genericCol]="cols"
       [loaderFunction]="loadReturns"
+      [columnTemplates]="{ 'return_date': dateTemplate, 'action': actionTemplate }"
       titletable="Devoluciones">
     </app-customtable>
   </p-card>
 </div>
+
+<ng-template #dateTemplate let-item>
+    {{ item.return_date | date:'medium' }}
+</ng-template>
+
+<ng-template #actionTemplate let-item>
+    <p-button icon="pi pi-eye" pTooltip="Ver Detalle" severity="info" text [routerLink]="['/purchases/return', item.id]"></p-button>
+</ng-template>

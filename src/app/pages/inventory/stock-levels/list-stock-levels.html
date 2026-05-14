@@ -3,7 +3,8 @@
     <app-customtable
       [genericCol]="cols"
       [loaderFunction]="loadStock"
-      [columnTemplates]="{ 'quantity': qtyTemplate }">
+      [columnTemplates]="{ 'quantity': qtyTemplate, 'alert': alertTemplate }"
+      [actionsTemplate]="actionTemplate">
     </app-customtable>
   </p-card>
 </div>
@@ -12,10 +13,24 @@
   <div class="flex items-center gap-2">
     <p-tag 
       [value]="(item.quantity | number:'1.2-2') ?? ''" 
-      [severity]="getSeverity(item.quantity)">
+      [severity]="getSeverity(item.quantity, item.stock_min)">
     </p-tag>
     @if (item.quantity <= 0) {
       <span class="text-xs text-red-500 font-bold">¡SIN STOCK!</span>
     }
   </div>
+</ng-template>
+
+<ng-template #alertTemplate let-item>
+    <p-tag 
+      [value]="item.alert" 
+      [severity]="item.alert === 'REORDENAR' ? 'danger' : 'success'">
+    </p-tag>
+</ng-template>
+
+<ng-template #actionTemplate let-item>
+    <button pButton pRipple icon="pi pi-cart-plus" class="p-button-sm p-button-info" 
+            pTooltip="Generar Pedido de Reabastecimiento" 
+            (click)="generateOrder(item)">
+    </button>
 </ng-template>

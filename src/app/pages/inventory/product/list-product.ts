@@ -13,6 +13,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { TabsModule } from 'primeng/tabs';
+import { Checkbox } from 'primeng/checkbox';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Customtable } from '@src/app/components/customTable/customtable';
 import { ProductService } from '@src/app/services/product.service';
@@ -32,7 +33,7 @@ import { AttributeValue } from '@src/app/interfaces/attribute.interface';
   imports: [
     CommonModule, CardModule, ButtonModule, InputTextModule, DialogModule, 
     ReactiveFormsModule, ToggleButtonModule, TooltipModule, ToastModule, 
-    ConfirmDialogModule, Customtable, SelectModule, TabsModule, InputNumberModule, MultiSelectModule
+    ConfirmDialogModule, Customtable, SelectModule, TabsModule, InputNumberModule, MultiSelectModule, Checkbox
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './list-product.html'
@@ -122,6 +123,7 @@ export class ListProductComponent implements OnInit {
       name: ['', Validators.required],
       cost_price: [0, Validators.required],
       sell_price: [0, Validators.required],
+      tax_exempt: [false],
       stock_min_override: [null],
       stock_max_override: [null],
       attribute_ids: [[]],
@@ -140,7 +142,16 @@ export class ListProductComponent implements OnInit {
   }
 
   openSkuForm() {
-    this.skuForm.reset({ cost_price: 0, sell_price: 0, status: true, attribute_ids: [] });
+    this.skuForm.reset({ cost_price: 0, sell_price: 0, tax_exempt: false, status: true, attribute_ids: [] });
+    this.displaySkuModal.set(true);
+  }
+
+  editSku(sku: SKU) {
+    this.skuForm.patchValue({
+        ...sku,
+        status: sku.status === '1',
+        attribute_ids: sku.attribute_values?.map((av: any) => av.attribute_value) || []
+    });
     this.displaySkuModal.set(true);
   }
 
@@ -153,11 +164,15 @@ export class ListProductComponent implements OnInit {
         status: this.skuForm.value.status ? '1' : '0'
     };
     
-    this.skuService.createSku(skuData).subscribe({
+    const request = skuData.id 
+        ? this.skuService.updateSku(skuData)
+        : this.skuService.createSku(skuData);
+
+    request.subscribe({
       next: () => {
         this.displaySkuModal.set(false);
         this.submittingSku.set(false);
-        this.skuService.getSkusByProduct(this.selectedProduct()?.id).subscribe(resp => this.skus.set(Array.isArray(resp) ? resp : (resp.results || [])));
+        this.loadSkus();
         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'SKU guardado' });
       },
       error: () => this.submittingSku.set(false)

@@ -49,6 +49,11 @@ export const routes: Routes = [
         canMatch: [AuthenticatedGuard],
     },
     {
+        path: 'sales',
+        loadChildren: () => import('./pages/sales/sales.routes').then(m => m.salesRoutes),
+        canMatch: [AuthenticatedGuard],
+    },
+    {
         path: 'payables',
         loadChildren: () => import('./pages/payables/payables.routes').then(m => m.PAYABLES_ROUTES),
         canMatch: [AuthenticatedGuard],

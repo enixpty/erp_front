@@ -18,7 +18,31 @@ export class MenuTemplate {
     
     router = inject(Router);
     authService = inject(AuthService);
-    
+    menuPT = {
+  root: { class: 'bg-blue-900 border-none' },
+  itemContent: ({ context }: any) => ({
+    class: context.level === 0 
+      ? (context.active ? 'bg-white text-gray-900' : 'text-white hover:bg-blue-800') 
+      : 'text-gray-700 hover:bg-gray-100'
+  }),
+  itemLabel: ({ context }: any) => ({
+    class: context.level === 0 
+      ? (context.active ? 'text-gray-900' : 'text-white') 
+      : 'text-gray-700'
+  }),
+  itemIcon: ({ context }: any) => ({
+    class: context.level === 0 
+      ? (context.active ? 'text-gray-900' : 'text-white') 
+      : 'text-gray-500'
+  }),
+  // Asegura que la flecha hacia abajo también cambie de color
+  submenuIcon: ({ context }: any) => ({
+    class: context.level === 0 
+      ? (context.active ? 'text-gray-900' : 'text-white') 
+      : 'text-gray-500'
+  }),
+  submenu: { class: 'bg-white shadow-lg border border-gray-200' }
+};
     // Computed signals for reactive UI
     initial = computed(() => {
         const name = this.authService.full_name();

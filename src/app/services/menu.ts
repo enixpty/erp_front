@@ -9,6 +9,10 @@ const baseUrl = environment.apiUrl
 
 export class MenuServices {
     private http = inject(HttpClient);
+    get_all_active(): Observable<any>{ 
+        return this.http.get<any>(`${ baseUrl }/api/security/menus/get_all_active/`)
+    }
+
     get_menus(params: any):Observable<any>{  
         let httpParams = new HttpParams();
     

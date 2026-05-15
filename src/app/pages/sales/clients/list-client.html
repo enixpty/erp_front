@@ -1,0 +1,21 @@
+<p-toast />
+<div class="p-4">
+  <p-card header="Listado de Clientes">
+    <div class="flex justify-end mb-4">
+        <p-button label="Nuevo Cliente" icon="pi pi-plus" [routerLink]="['/sales/clients/new']"></p-button>
+    </div>
+    <app-customtable
+        [genericCol]="cols"
+        [loaderFunction]="loadClients"
+        [actionsTemplate]="actionTemplate"
+        titletable="Clientes">
+    </app-customtable>
+  </p-card>
+</div>
+
+<ng-template #actionTemplate let-item>
+    <div class="flex gap-2">
+        <p-button icon="pi pi-pencil" severity="secondary" text [routerLink]="['/sales/clients/edit', item.id]"></p-button>
+        <p-button icon="pi pi-trash" severity="danger" text (click)="deleteClient(item.id)"></p-button>
+    </div>
+</ng-template>

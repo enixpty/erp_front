@@ -21,6 +21,8 @@ interface Menu {
   order: number;
   status: string;
   status_name?: string;
+  parent: number | null;
+  parent_name?: string;
   created: string;
   modified: string;
 }
@@ -44,7 +46,9 @@ export class ListMenu implements OnInit {
   delVisible = signal<boolean>(false);
   
   statusOptions = signal<any[]>([]);
+  menuOptions = signal<any[]>([]);
   selectedStatus: any | undefined;
+  selectedParent: any | undefined;
   
   formSubmitted = signal(false);
 
@@ -71,17 +75,17 @@ export class ListMenu implements OnInit {
   cols = [
     { field: 'id', header: 'Id', order: true, filter: true },
     { field: 'name', header: 'Nombre', order: true, filter: true },
+    { field: 'parent_name', header: 'Padre', order: true, filter: true },
     { field: 'order', header: 'Orden', order: true, filter: true },
     { field: 'status_name', header: 'Estado', order: true, filter: true },
     { field: 'path', header: 'Ruta', order: true, filter: true },
     { field: 'icon', header: 'Icono', order: true, filter: true },
-    { field: 'created', header: 'Fecha Creación', order: true, filter: true },
-    { field: 'modified', header: 'Modificado', order: true, filter: true },
     { field: 'action', header: '', order: false, filter: false }
   ];
 
   ngOnInit() {
     this.loadStatusOptions();
+    this.menus.get_menus({}).subscribe(data => this.menuOptions.set(data.results || data));
   }
 
   loadStatusOptions() {
@@ -90,7 +94,7 @@ export class ListMenu implements OnInit {
         debugger
         this.statusOptions.set(data);
         if (!this.selectedMenu().id) {
-          this.selectedStatus = data.find(s => s.value === 'ACTIVE');
+          this.selectedStatus = data.find(s => s.value === '1');
         }
       },
       error: (err: any) => console.error('Error loading status options', err)
@@ -103,7 +107,8 @@ export class ListMenu implements OnInit {
     path: '',
     icon: '',
     order: 0,
-    status: 'ACTIVE',
+    status: '1',
+    parent: null,
     created: '',
     modified: ''
   });
@@ -114,7 +119,8 @@ export class ListMenu implements OnInit {
     path: '',
     icon: '',
     order: 0,
-    status: 'ACTIVE',
+    status: '1',
+    parent: null,
     created: '',
     modified: ''
   });
@@ -137,6 +143,7 @@ export class ListMenu implements OnInit {
 
   handEdit() {
     this.selectedMenu().status = this.selectedStatus?.value;
+    this.selectedMenu().parent = this.selectedParent?.id || null;
     this.formSubmitted.set(true);
     if (this.isFormInvalid()) return;
 
@@ -160,9 +167,13 @@ export class ListMenu implements OnInit {
   }
 
   handleEdit(data: any) {
-    this.selectedMenu.set({ ...data });
-    this.selectedStatus = this.statusOptions().find(c => c.value === data.status);
-    this.isVisible.set(true);
+    this.menus.get_all_active().subscribe(menusData => {
+      this.menuOptions.set(menusData);
+      this.selectedMenu.set({ ...data });
+      this.selectedStatus = this.statusOptions().find(c => c.value === data.status);
+      this.selectedParent = this.menuOptions().find(m => m.id === data.parent);
+      this.isVisible.set(true);
+    });
   }
 
   handleDelete(data: any) {
@@ -177,18 +188,23 @@ export class ListMenu implements OnInit {
   }
 
   openNew() {
-    this.selectedMenu.set({
-      id: null,
-      name: '',
-      path: '',
-      icon: '',
-      order: 0,
-      status: 'ACTIVE',
-      created: '',
-      modified: ''
+    this.menus.get_all_active().subscribe(menusData => {
+      this.menuOptions.set(menusData);
+      this.selectedMenu.set({
+        id: null,
+        name: '',
+        path: '',
+        icon: '',
+        order: 0,
+        status: '1',
+        parent: null,
+        created: '',
+        modified: ''
+      });
+      this.selectedStatus = this.statusOptions().find(s => s.value === '1');
+      this.selectedParent = undefined;
+      this.formSubmitted.set(false);
+      this.isVisible.set(true);
     });
-    this.selectedStatus = this.statusOptions().find(s => s.value === 'ACTIVE');
-    this.formSubmitted.set(false);
-    this.isVisible.set(true);
   }
 }

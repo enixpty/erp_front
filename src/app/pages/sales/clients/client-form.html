@@ -1,0 +1,104 @@
+<p-toast />
+<div class="p-4">
+    <p-card>
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-3 p-4 border-b border-surface-200 dark:border-surface-800">
+                <i class="pi pi-user-plus text-2xl text-primary"></i>
+                <h2 class="text-xl font-bold m-0">{{isEdit ? 'Editar Cliente' : 'Registro de Nuevo Cliente'}}</h2>
+            </div>
+        </ng-template>
+
+        <form [formGroup]="form" (ngSubmit)="save()" class="grid grid-cols-1 md:grid-cols-12 gap-6 p-2">
+            
+            <!-- Sección: Información Personal/Legal -->
+            <div class="md:col-span-12">
+                <h3 class="text-md font-semibold mb-4 flex items-center gap-2 text-primary">
+                    <i class="pi pi-info-circle"></i> Información General
+                </h3>
+            </div>
+
+            <div class="md:col-span-4 flex flex-col gap-2">
+                <label for="identification" class="text-sm font-bold">Identificación <span class="text-red-500">*</span></label>
+                <input pInputText id="identification" formControlName="identification" placeholder="8-888-8888 o Pasaporte" class="w-full" />
+                <small class="p-error" *ngIf="form.get('identification')?.touched && form.get('identification')?.invalid">
+                    <span *ngIf="form.get('identification')?.errors?.['required']">Requerido</span>
+                    <span *ngIf="form.get('identification')?.errors?.['invalidIdentification']">Formato inválido</span>
+                </small>
+            </div>
+
+            <div class="md:col-span-4 flex flex-col gap-2">
+                <label for="client_type" class="text-sm font-bold">Tipo de Cliente <span class="text-red-500">*</span></label>
+                <p-select [options]="clientTypes" formControlName="client_type" optionLabel="label" optionValue="value" placeholder="Seleccione Tipo" class="w-full"></p-select>
+            </div>
+
+            <div class="md:col-span-4 flex flex-col gap-2">
+                <label for="status" class="text-sm font-bold">Estado <span class="text-red-500">*</span></label>
+                <p-select [options]="statusOptions" formControlName="status" optionLabel="label" optionValue="value" class="w-full"></p-select>
+            </div>
+
+            <div class="md:col-span-12 flex flex-col gap-2">
+                <label for="parent" class="text-sm font-bold">Empresa Principal / Grupo Corporativo</label>
+                <p-select [options]="clientOptions" formControlName="parent" optionLabel="first_name" optionValue="id" 
+                    placeholder="Seleccione Empresa Principal (Opcional)" [filter]="true" [showClear]="true" class="w-full">
+                </p-select>
+                <small class="text-surface-500 italic">Si este cliente es un proyecto o subsidiaria, seleccione la empresa dueña del crédito.</small>
+            </div>
+
+            <div class="md:col-span-6 flex flex-col gap-2">
+                <label for="first_name" class="text-sm font-bold">Nombre / Razón Social <span class="text-red-500">*</span></label>
+                <input pInputText id="first_name" formControlName="first_name" placeholder="Ej: Juan Pérez" class="w-full" />
+                <small class="p-error" *ngIf="form.get('first_name')?.touched && form.get('first_name')?.invalid">
+                    Requerido
+                </small>
+            </div>
+
+            <div class="md:col-span-6 flex flex-col gap-2">
+                <label for="last_name" class="text-sm font-bold">Apellido</label>
+                <input pInputText id="last_name" formControlName="last_name" placeholder="Opcional" class="w-full" />
+            </div>
+
+            <p-divider class="md:col-span-12"></p-divider>
+
+            <!-- Sección: Contacto y Facturación -->
+            <div class="md:col-span-12">
+                <h3 class="text-md font-semibold mb-4 flex items-center gap-2 text-primary">
+                    <i class="pi pi-wallet"></i> Contacto y Facturación
+                </h3>
+            </div>
+
+            <div class="md:col-span-4 flex flex-col gap-2">
+                <label for="email" class="text-sm font-bold">Correo Electrónico <span class="text-red-500">*</span></label>
+                <input pInputText id="email" formControlName="email" type="email" placeholder="ejemplo@correo.com" class="w-full" />
+                <small class="p-error" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">
+                    Correo inválido
+                </small>
+            </div>
+
+            <div class="md:col-span-4 flex flex-col gap-2">
+                <label for="phone" class="text-sm font-bold">Teléfono <span class="text-red-500">*</span></label>
+                <input pInputText id="phone" formControlName="phone" placeholder="Ej: 6666-6666" class="w-full" />
+                <small class="p-error" *ngIf="form.get('phone')?.touched && form.get('phone')?.invalid">
+                    Requerido
+                </small>
+            </div>
+
+            <div class="md:col-span-4 flex flex-col gap-2">
+                <label for="payment_term" class="text-sm font-bold">Términos de Pago <span class="text-red-500">*</span></label>
+                <p-select [options]="paymentTerms" formControlName="payment_term" optionLabel="label" optionValue="value" placeholder="Seleccione Término" class="w-full"></p-select>
+            </div>
+
+            @if (form.get('payment_term')?.value === 'CREDIT') {
+                <div class="md:col-span-4 flex flex-col gap-2">
+                    <label for="credit_days" class="text-sm font-bold">Días de Vencimiento <span class="text-red-500">*</span></label>
+                    <p-select [options]="creditDaysOptions" formControlName="credit_days" optionLabel="label" optionValue="value" placeholder="Seleccione Plazo" class="w-full"></p-select>
+                </div>
+            }
+
+            <!-- Botones de Acción -->
+            <div class="md:col-span-12 flex justify-end gap-3 mt-6 border-t border-surface-200 dark:border-surface-800 pt-6">
+                <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [routerLink]="['/sales/clients']" styleClass="p-button-outlined"></p-button>
+                <p-button [label]="isEdit ? 'Actualizar Cliente' : 'Registrar Cliente'" icon="pi pi-save" type="submit" [disabled]="form.invalid" severity="primary"></p-button>
+            </div>
+        </form>
+    </p-card>
+</div>

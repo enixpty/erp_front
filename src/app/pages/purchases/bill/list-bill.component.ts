@@ -4,12 +4,11 @@ import { Customtable } from '@src/app/components/customTable/customtable';
 import { VendorInvoiceService } from '@src/app/services/vendor-invoice.service';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-list-bill',
   standalone: true,
-  imports: [CommonModule, Customtable, ButtonModule, CardModule, RouterLink],
+  imports: [CommonModule, Customtable, ButtonModule, CardModule],
   templateUrl: './list-bill.html'
 })
 export class ListBillComponent {

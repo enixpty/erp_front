@@ -90,6 +90,13 @@
     </div>
     
     <div class="col-span-4 pt-2"> 
+        <label for="parent" class="font-semibold w-24">Menú Padre</label>
+        <p-select [options]="menuOptions()" [(ngModel)]="selectedParent"
+            class="flex-auto w-full"  [appendTo]="'body'" [filter]="true"
+            optionLabel="name" placeholder="Ninguno (Raíz)" [showClear]="true" />
+    </div>
+    
+    <div class="col-span-4 pt-2"> 
         <label for="active" class="font-semibold w-24">Estado</label>
         <p-select [options]="statusOptions()" [(ngModel)]="selectedStatus"
             class="flex-auto w-full"  [appendTo]="'body'"

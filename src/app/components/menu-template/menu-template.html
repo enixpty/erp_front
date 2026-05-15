@@ -4,7 +4,7 @@
    @if (hasMenus()) {
      <p-menubar [model]="items()"   
          styleClass="!border-[#003366] !bg-[#003366] !text-white"
-         style="box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+         style="box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);" [pt]="menuPT">
       <ng-template #start>
             <div class="pl-4">
               <img src="logo.png" width="35" height="35" />

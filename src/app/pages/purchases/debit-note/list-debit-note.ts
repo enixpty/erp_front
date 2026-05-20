@@ -9,19 +9,26 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-list-debit-note',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, Customtable, RouterLink],
+  imports: [CommonModule, Customtable, CardModule, ButtonModule, RouterLink],
   templateUrl: './list-debit-note.html'
 })
 export class ListDebitNoteComponent {
   private debitNoteService = inject(DebitNoteService);
 
   cols = [
-    { field: 'note_number', header: 'No. Nota' },
-    { field: 'invoice', header: 'ID Factura' },
+    { field: 'note_number', header: 'N° Nota' },
+    { field: 'invoice_number', header: 'Factura Rel.' },
     { field: 'amount', header: 'Monto' },
     { field: 'reason', header: 'Motivo' },
-    { field: 'created', header: 'Fecha' }
+    { field: 'action', header: 'Acciones' }
   ];
 
   loadDebitNotes = (params: any) => this.debitNoteService.getDebitNotes(params);
+
+  printDebitNote(id: number) {
+    this.debitNoteService.printDebitNote(id).subscribe((blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+    });
+  }
 }

@@ -7,4 +7,6 @@ export interface User {
     role_id: number | null;
     password: string | null,
     rpassword: string | null;
+    max_line_discount?: number;
+    max_global_discount?: number;
 }  

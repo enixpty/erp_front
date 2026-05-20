@@ -1,13 +1,13 @@
-        <p-table #dt [value]=this.genericData() 
+        <p-table #dt [value]="data.length > 0 ? data : genericData()" 
             [paginator]="true"
             [rows]="10"  [tableStyle]="{'min-width': '50rem'}"
             [resizableColumns]="true" 
             [scrollable]="true"
             paginatorPosition="bottom"
             [showCurrentPageReport]="true"
-            [totalRecords]="this.totalCount()"
-            [lazy]="true"  
-            (onLazyLoad)="loadRegistros($event)"
+            [totalRecords]="loaderFunction ? totalCount() : totalRecords"
+            [lazy]="loaderFunction ? true : false"  
+            (onLazyLoad)="loaderFunction ? loadRegistros($event) : null"
             currentPageReportTemplate="{first}-{last} de {totalRecords}"
             [rowHover]="true"
             dataKey="id"  
@@ -16,6 +16,7 @@
             [selection]="selection"
             (selectionChange)="onSelectionChange($event)"
             [selectionMode]="selectionMode"
+            [loading]="loaderFunction ? isloading() : loading"
         >
         <ng-template pTemplate="paginatorright">
             <div class="flex justify-content-end">
@@ -35,7 +36,7 @@
                         <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
                     </th>
                 }
-                @for( col of this.genericCol; track col.field){
+                @for( col of columns.length > 0 ? columns : genericCol; track col.field){
                     <th [pSortableColumn]="col.field">
                         <div class="flex items-center gap-2">
                             {{col.header}}
@@ -56,7 +57,7 @@
                         <p-tableCheckbox [value]="item"></p-tableCheckbox>
                     </td>
                 }
-                @for( col of this.genericCol; track col.field){
+                @for( col of columns.length > 0 ? columns : genericCol; track col.field){
                 <td>
                     @if (col.field === 'action' && actionsTemplate) {
                         <ng-container *ngTemplateOutlet="actionsTemplate; context: {$implicit: item}">

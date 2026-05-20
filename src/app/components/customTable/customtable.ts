@@ -17,13 +17,17 @@ export type ArrayServicesLoader = (params: any) => Observable<any>;
 export class Customtable {
   @Input () titletable : string='';
   @ViewChild('dt') dt: Table | undefined;
-  @Input () genericCol : any;
-  @Input() loaderFunction!: ArrayServicesLoader;
+  @Input() genericCol : any;
+  @Input() loaderFunction?: ArrayServicesLoader;
   @Input() actionsTemplate: TemplateRef<any> | null = null;
   @Input() columnTemplates: { [key: string]: TemplateRef<any> } | null = null;
   @Input() selection: any[] = [];
   @Output() selectionChange = new EventEmitter<any[]>();
   @Input() selectionMode: 'single' | 'multiple' | null = null;
+  @Input() data: any[] = [];
+  @Input() columns: any[] = [];
+  @Input() totalRecords: number = 0;
+  @Input() loading: boolean = false;
   
   totalCount = signal<number>(0) 
   genericData = signal<[]>([])  
@@ -48,50 +52,68 @@ export class Customtable {
   }
 
   ngOnInit(){
-    const params = {
-      page: 1, 
-      rows: 10, 
-      filters: [], 
-      sort: 1,      // sort -> asc/desc/null
-      sortField: undefined  // field name to sort data
-    }; 
-      this.loaderFunction(params).subscribe((resp:any)=>
-      {
-        this.genericData.set(resp.results)
-        this.isloading.set(false)
-        this.totalCount.set(resp.count) 
-      })
+    if (this.loaderFunction) {
+      const params = {
+        page: 1, 
+        rows: 10, 
+        filters: [], 
+        sort: 1,      // sort -> asc/desc/null
+        sortField: undefined  // field name to sort data
+      }; 
+        console.log("Customtable: Executing loaderFunction...");
+        this.loaderFunction?.(params).subscribe({
+          next: (resp: any) => {
+            console.log("Customtable: Data received", resp);
+            const data = resp.results || resp;
+            const count = resp.count || data.length;
+            this.genericData.set(data);
+            this.isloading.set(false);
+            this.totalCount.set(count);
+          },
+          error: (err) => {
+            console.error("Customtable: Loader error", err);
+            this.isloading.set(false);
+          }
+        });
+    } else {
+        this.isloading.set(false);
+    }
   }
   onRefresh() {
         if (this.dt) {
-            // Llama a reset(), que forza un nuevo evento onLazyLoad.
             this.dt.reset();
-            console.log("Tabla genérica reseteada y recargando...");
         }
   }
 
   loadRegistros(event: any) {
       this.isloading.set(true) ; 
-      // PrimeNG da el índice inicial (0, 10, 20...). Django quiere el número de página (1, 2, 3...)
       const first = event.first ?? 0;
       const rows = event.rows ?? 10;
       const filters = extractActiveFilters(event.filters) 
-      // 📌 CALCULAR EL NÚMERO DE PÁGINA: (índice / filas) + 1
       const currentPage = Math.floor(first / rows) + 1; 
   
       const params = {
         page: currentPage, 
         rows: rows, 
         filters: filters, 
-        sort: event.sortOrder,      // sort -> asc/desc/null
-        sortField: event.sortField // field name to sort data
+        sort: event.sortOrder,
+        sortField: event.sortField 
       }; 
-      this.loaderFunction(params).subscribe((resp:any)=>
-      {
-        this.genericData.set(resp.results)
-        this.isloading.set(false)
-        this.totalCount.set(resp.count) 
-      })
+      console.log("Customtable: loadRegistros calling loaderFunction...");
+      this.loaderFunction?.(params).subscribe({
+        next: (resp: any) => {
+          console.log("Customtable: Data received in loadRegistros", resp);
+          const data = resp.results || resp;
+          const count = resp.count || data.length;
+          this.genericData.set(data);
+          this.isloading.set(false);
+          this.totalCount.set(count);
+        },
+        error: (err) => {
+          console.error("Customtable: Loader error in loadRegistros", err);
+          this.isloading.set(false);
+        }
+      });
   
     }
 

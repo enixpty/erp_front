@@ -1,0 +1,42 @@
+<p-toast></p-toast>
+<div class="p-6 bg-surface-100 min-h-screen">
+  <p-card styleClass="shadow-xl rounded-2xl border-t-4 border-primary">
+    <h2 class="text-2xl font-bold mb-6 text-primary-900">Configuración de Tipo de Documento</h2>
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="field">
+          <label class="block mb-2 font-bold text-sm">Nombre del Documento</label>
+          <input pInputText formControlName="name" class="w-full" />
+        </div>
+        <div class="field">
+          <label class="block mb-2 font-bold text-sm">Código</label>
+          <input pInputText formControlName="code" class="w-full" />
+        </div>
+        <div class="field">
+          <label class="block mb-2 font-bold text-sm">Categoría</label>
+          <p-select [options]="categories" formControlName="category" optionLabel="label" optionValue="value" class="w-full" />
+        </div>
+        <div class="field">
+          <label class="block mb-2 font-bold text-sm">Tipo de pago</label>
+          <p-select [options]="paymentTerms" formControlName="payment_term" optionLabel="label" optionValue="value" class="w-full" />
+        </div>
+        <div class="field flex items-center gap-2 mt-4">
+          <p-checkbox formControlName="affects_inventory" [binary]="true" inputId="affects"></p-checkbox>
+          <label for="affects" class="font-bold text-sm">Afecta Inventario</label>
+        </div>
+        <div class="field">
+          <label class="block mb-2 font-bold text-sm">Acción sobre Inventario</label>
+          <p-select [options]="inventoryActions" formControlName="inventory_action" optionLabel="label" optionValue="value" class="w-full" />
+        </div>
+        <div class="field">
+          <label class="block mb-2 font-bold text-sm">Cuenta Contable</label>
+          <input pInputText formControlName="ledger_account" class="w-full" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-8">
+        <p-button label="Cancelar" [routerLink]="['..']" severity="secondary"></p-button>
+        <p-button label="Guardar Configuración" type="submit" severity="primary"></p-button>
+      </div>
+    </form>
+  </p-card>
+</div>

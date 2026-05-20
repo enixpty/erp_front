@@ -15,4 +15,8 @@ export class DebitNoteService {
   createDebitNote(data: any): Observable<any> {
     return this.http.post<any>(this.url, data);
   }
+
+  printDebitNote(id: number): Observable<Blob> {
+    return this.http.get(`${this.url}${id}/pdf/`, { responseType: 'blob' });
+  }
 }

@@ -1,0 +1,23 @@
+<p-confirmDialog></p-confirmDialog>
+<div class="p-6 bg-surface-100 min-h-screen">
+  <app-customtable 
+    titletable="Pedidos de Venta" 
+    [genericCol]="columns" 
+    [loaderFunction]="loaderFunction"
+    [actionsTemplate]="actionsTemplate">
+  </app-customtable>
+</div>
+
+<ng-template #actionsTemplate let-order>
+  <div class="flex gap-1">
+    <p-button icon="pi pi-eye" [routerLink]="['/sales/sales-orders', order.id]" severity="info" [text]="true" pTooltip="Ver Detalle" tooltipPosition="top"></p-button>
+    
+    @if (order.status === 'CONFIRMED') {
+        <p-button icon="pi pi-file-invoice" severity="success" [text]="true" pTooltip="Generar Factura" tooltipPosition="top" (onClick)="generateInvoice(order)"></p-button>
+        <p-button icon="pi pi-times" severity="danger" [text]="true" pTooltip="Anular Pedido" tooltipPosition="top" (onClick)="cancelOrder(order)"></p-button>
+    }
+    
+    <p-button icon="pi pi-print" severity="secondary" [text]="true" pTooltip="Imprimir Pedido" tooltipPosition="top" (onClick)="printOrder(order)"></p-button>
+    <p-button icon="pi pi-envelope" severity="secondary" [text]="true" pTooltip="Enviar por Email" tooltipPosition="top" (onClick)="sendEmail(order)"></p-button>
+  </div>
+</ng-template>

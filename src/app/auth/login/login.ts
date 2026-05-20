@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed  } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectorRef } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button'; 
 import {  FormsModule } from '@angular/forms';
@@ -23,6 +23,7 @@ export class Login {
   auth = inject(AuthService) 
   messageService = inject(MessageService)
   router = inject(Router)
+  cd = inject(ChangeDetectorRef)
 
   email = signal('');
   password = signal('');
@@ -60,7 +61,8 @@ export class Login {
 
   login(){
     if (this.formValid()) {
-      setTimeout(() => this.loading.set(true));
+      this.loading.set(true);
+      setTimeout(() => this.cd.detectChanges());
       let data : LoginUser = {
         email: this.email(),
         password: this.password()
@@ -68,6 +70,7 @@ export class Login {
       this.auth.login(data).subscribe({
         next: (resp) => {
           this.loading.set(false);
+          this.cd.detectChanges();
           if(resp){
             if (this.rememberMe()) {
               localStorage.setItem('rememberedEmail', this.email());
@@ -82,6 +85,7 @@ export class Login {
         },
         error: () => {
           this.loading.set(false);
+          this.cd.detectChanges();
           this.alert('error', 'Error' ,"Ocurrió un error inesperado")
         }
       })

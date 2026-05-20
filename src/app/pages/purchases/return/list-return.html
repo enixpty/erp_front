@@ -14,5 +14,8 @@
 </ng-template>
 
 <ng-template #actionTemplate let-item>
-    <p-button icon="pi pi-eye" pTooltip="Ver Detalle" severity="info" text [routerLink]="['/purchases/return', item.id]"></p-button>
+    <div class="flex gap-2">
+        <p-button icon="pi pi-eye" pTooltip="Ver Detalle" severity="info" text [routerLink]="['/purchases/return', item.id]"></p-button>
+        <p-button icon="pi pi-print" pTooltip="Imprimir Devolución" severity="help" text (click)="printReturn(item.id)"></p-button>
+    </div>
 </ng-template>

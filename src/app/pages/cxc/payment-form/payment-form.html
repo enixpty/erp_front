@@ -1,0 +1,18 @@
+<p-toast />
+<p-card header="Registrar Pago" styleClass="shadow-sm border rounded-lg">
+    <form [formGroup]="form" class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold text-slate-600">Monto a pagar (Saldo: {{pendingAmount | currency}})</label>
+            <input pInputText type="number" formControlName="amount" [max]="pendingAmount" />
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold text-slate-600">Fecha de Pago</label>
+            <p-datePicker formControlName="payment_date" [showIcon]="true" class="w-full"></p-datePicker>
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold text-slate-600">Referencia (No. Banco/Cheque)</label>
+            <input pInputText formControlName="reference" />
+        </div>
+        <p-button label="Confirmar Pago" icon="pi pi-check" (onClick)="save()" [disabled]="form.invalid"></p-button>
+    </form>
+</p-card>

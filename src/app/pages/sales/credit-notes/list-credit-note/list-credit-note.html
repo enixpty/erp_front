@@ -1,0 +1,21 @@
+<div class="p-6 bg-surface-100 min-h-screen">
+    <p-card styleClass="shadow-xl border-t-4 border-t-primary rounded-2xl mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-bold text-primary-900 m-0">Notas de Crédito</h2>
+                <p class="text-surface-500 m-0">Histórico de devoluciones y ajustes.</p>
+            </div>
+            <p-button label="Nueva Nota de Crédito" icon="pi pi-file-minus" [routerLink]="['/sales/credit-notes/new']" severity="danger" size="small"></p-button>
+        </div>
+    </p-card>
+
+    <p-card styleClass="shadow-lg rounded-2xl overflow-hidden">
+        <app-customtable 
+            [loaderFunction]="loadCreditNotes" 
+            [columns]="columns">
+            <ng-template #actions let-row>
+                <p-button icon="pi pi-print" [text]="true" severity="info" pTooltip="Imprimir PDF" (click)="printCreditNote(row.id)"></p-button>
+            </ng-template>
+        </app-customtable>
+    </p-card>
+</div>

@@ -123,6 +123,22 @@
             }
         </div>
 
+        <div class="col-span-4 pt-2"> 
+            <label for="max_line_discount_edit" class="font-semibold w-24">Máx. Dcto. Línea (%)</label>
+            <p-inputNumber id="max_line_discount_edit" class="flex-auto w-full" 
+                    [ngModel]="selectedUser().max_line_discount"
+                    (ngModelChange)="updateUserField('max_line_discount', $event)"
+                    suffix="%" [min]="0" [max]="100" [minFractionDigits]="2" />
+        </div>
+
+        <div class="col-span-4 pt-2"> 
+            <label for="max_global_discount_edit" class="font-semibold w-24">Máx. Dcto. Global (%)</label>
+            <p-inputNumber id="max_global_discount_edit" class="flex-auto w-full" 
+                    [ngModel]="selectedUser().max_global_discount"
+                    (ngModelChange)="updateUserField('max_global_discount', $event)"
+                    suffix="%" [min]="0" [max]="100" [minFractionDigits]="2" />
+        </div>
+
      <div class="flex justify-end gap-4 pt-3">
          <p-button 
              label="Confirmar" 

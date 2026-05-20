@@ -4,7 +4,6 @@ import { Customtable } from '@src/app/components/customTable/customtable';
 import { AccountPayableService } from '@src/app/services/account-payable.service';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { RouterLink } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { PaymentFormComponent } from './payment-form.component';
@@ -12,7 +11,7 @@ import { PaymentFormComponent } from './payment-form.component';
 @Component({
   selector: 'app-list-payables',
   standalone: true,
-  imports: [CommonModule, Customtable, ButtonModule, CardModule, RouterLink, PaymentFormComponent, ToastModule],
+  imports: [CommonModule, Customtable, ButtonModule, CardModule, PaymentFormComponent, ToastModule],
   providers: [MessageService],
   templateUrl: './list-payables.html'
 })

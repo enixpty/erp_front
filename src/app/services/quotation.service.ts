@@ -30,4 +30,8 @@ export class QuotationService {
   deleteQuotation(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}/`);
   }
+
+  convertQuotation(id: number, warehouseId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/convert/`, { warehouse_id: warehouseId });
+  }
 }

@@ -8,6 +8,7 @@ import { Select } from 'primeng/select';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { InputMaskModule } from 'primeng/inputmask';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageModule } from 'primeng/message';
 
 import { UserServices } from '@src/app/services/users';
@@ -20,7 +21,7 @@ import { LvalService } from '@src/app/services/lval.service';
 @Component({
   selector: 'app-list-user',
   standalone: true,
-  imports: [CardModule, InputTextModule, InputMaskModule,Select, Toast, 
+  imports: [CardModule, InputTextModule, InputMaskModule, InputNumberModule, Select, Toast, 
             ButtonModule, FormsModule,FloatLabelModule, MessageModule, Customtable, CustomModal], 
   templateUrl: './list-user.html',
   styleUrl: './list-user.css',
@@ -103,7 +104,9 @@ export class ListUser implements OnInit {
     role_id: null,
     is_active: true, 
     password: null,
-    rpassword: null   
+    rpassword: null,
+    max_line_discount: 0,
+    max_global_discount: 0
   });
   
   selectedDelete = signal<User>({ 
@@ -157,7 +160,11 @@ export class ListUser implements OnInit {
   }
 
   handleEdit(data: any) { 
-    this.selectedUser.set({ ...data });
+    this.selectedUser.set({ 
+      ...data,
+      max_line_discount: data.max_line_discount || 0,
+      max_global_discount: data.max_global_discount || 0
+    });
     this.selectedStatus.set(this.statusOptions().find(c => c.value === (data.is_active ? 'ACTIVE' : 'INACTIVE'))); 
     
     if (data.role?.role?.id){
@@ -194,6 +201,9 @@ export class ListUser implements OnInit {
     }
     if (field == 'rpassword') {
         this.txtrpasswd.set(value);
+    }
+    if (field == 'max_line_discount' || field == 'max_global_discount') {
+        newValue = value;
     }
     this.selectedUser.update(user => ({ ...user, [field]: newValue }));
   }

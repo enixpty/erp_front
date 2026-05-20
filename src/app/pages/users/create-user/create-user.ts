@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { ButtonModule } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { Toast } from 'primeng/toast';
@@ -14,7 +15,7 @@ import { RolesServices } from '@src/app/services/roles';
 
 @Component({
   selector: 'app-create-user',
-  imports: [CardModule, NgClass, InputTextModule, Select, Toast, 
+  imports: [CardModule, NgClass, InputTextModule, InputNumberModule, Select, Toast, 
             ButtonModule, FormsModule, MessageModule],
   templateUrl: './create-user.html',
   styleUrl: './create-user.css',
@@ -43,7 +44,9 @@ export class CreateUser {
     role_id: null,
     is_active: true,
     password: null,
-    rpassword: null
+    rpassword: null,
+    max_line_discount: 0,
+    max_global_discount: 0
   });
 
   readonly isFirstRequired = computed(() => {
@@ -121,7 +124,9 @@ export class CreateUser {
       role_id: null,
       is_active: true,
       password: null,
-      rpassword: null
+      rpassword: null,
+      max_line_discount: 0,
+      max_global_discount: 0
     });
     this.txtpasswd.set('');
     this.txtrpasswd.set('');

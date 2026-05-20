@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -28,15 +28,16 @@ interface Menu {
   styleUrl: './create-menu.css',
   providers: [MessageService],
 })
-export class CreateMenu {
+export class CreateMenu implements OnInit {
   private messageService = inject(MessageService);
+  private cd = inject(ChangeDetectorRef);
   typesev = signal<string>('');
   txtmessage = signal<string>('');
   txtitle = signal<string>('');
   formSubmitted = signal(false);
   status: any[] | undefined;
   selected: any | undefined;
-  parentMenus: any[] | undefined;
+  parentMenus: any[] = [];
   selectedParent: any | undefined;
 
   menus = inject(MenuServices);
@@ -80,11 +81,10 @@ export class CreateMenu {
     
     this.menus.get_menulist().subscribe({
       next: (resp) => {
-          this.parentMenus =  resp;
+          this.parentMenus = resp;
+          this.cd.detectChanges();
       }
-    })
-
-  
+    });
   }
 
   triggerToast() {

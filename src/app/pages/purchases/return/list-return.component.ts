@@ -24,4 +24,11 @@ export class ListReturnComponent {
   ];
 
   loadReturns = (params: any) => this.returnService.getReturns(params);
+
+  printReturn(id: number) {
+    this.returnService.printReturn(id).subscribe((blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+    });
+  }
 }

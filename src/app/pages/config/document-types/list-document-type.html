@@ -1,0 +1,16 @@
+<div class="p-6 bg-surface-100 min-h-screen">
+  <p-card styleClass="shadow-xl rounded-2xl mb-6">
+    <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-primary-900 m-0">Tipos de Documento</h2>
+        <p-button label="Nuevo" icon="pi pi-plus" [routerLink]="['new']" severity="primary"></p-button>
+    </div>
+  </p-card>
+  <app-customtable [loaderFunction]="loadData" [columns]="columns" [columnTemplates]="{'actions': actions, 'boolean': booleanTemplate}">
+      <ng-template #booleanTemplate let-row let-col="col">
+          <i class="pi" [ngClass]="row[col.field] ? 'pi-check-circle text-green-500' : 'pi-times-circle text-red-500'"></i>
+      </ng-template>
+      <ng-template #actions let-row>
+        <p-button icon="pi pi-pencil" [routerLink]="[row.id]" [text]="true" severity="info" pTooltip="Editar"></p-button>
+      </ng-template>
+  </app-customtable>
+</div>

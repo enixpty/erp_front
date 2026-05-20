@@ -59,6 +59,11 @@ export const routes: Routes = [
         canMatch: [AuthenticatedGuard],
     },
     {
+        path: 'cxc',
+        loadChildren: () => import('./pages/cxc/cxc.routes').then(m => m.cxcRoutes),
+        canMatch: [AuthenticatedGuard],
+    },
+    {
         path: '**',
         redirectTo: 'home'
     }

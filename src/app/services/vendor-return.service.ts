@@ -20,4 +20,8 @@ export class VendorReturnService {
   getReturnById(id: any): Observable<any> {
     return this.http.get<any>(`${this.url}${id}/`);
   }
+
+  printReturn(id: number): Observable<Blob> {
+    return this.http.get(`${this.url}${id}/pdf/`, { responseType: 'blob' });
+  }
 }

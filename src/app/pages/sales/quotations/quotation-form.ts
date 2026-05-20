@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef, ViewChildren, QueryList, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -8,19 +8,21 @@ import { Select } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { DividerModule } from 'primeng/divider';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService, MenuItem } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SplitButtonModule } from 'primeng/splitbutton';
 import { QuotationService } from '@src/app/services/quotation.service';
 import { ClientService } from '@src/app/services/client.service';
 import { SkuService } from '@src/app/services/sku.service';
 import { LvalService } from '@src/app/services/lval.service';
 import { Quotation, QuotationDetail } from '@src/app/interfaces/quotation.interface';
+import { WarehouseService } from '@src/app/services/warehouse.service';
 
 @Component({
   selector: 'app-quotation-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, Toast, RouterLink, ConfirmDialogModule],
+  imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, Toast, RouterLink, ConfirmDialogModule, SplitButtonModule],
   providers: [MessageService, ConfirmationService],
   templateUrl: './quotation-form.html'
 })
@@ -33,10 +35,12 @@ export class QuotationFormComponent implements OnInit {
   private clientService = inject(ClientService);
   private skuService = inject(SkuService);
   private lvalService = inject(LvalService);
+  private warehouseService = inject(WarehouseService);
   private msg = inject(MessageService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private confirmationService = inject(ConfirmationService);
+  private cd = inject(ChangeDetectorRef);
 
   form: FormGroup = this.fb.group({
     id: [null],
@@ -53,6 +57,12 @@ export class QuotationFormComponent implements OnInit {
 
   clients: any[] = [];
   skus: any[] = [];
+  warehouses: any[] = [];
+  actionItems: MenuItem[] = [];
+  isEdit = false;
+  buttonLabel = 'Guardar';
+  isLoaded = false;
+
   statusOptions = [
     { label: 'Borrador', value: 'DRAFT' },
     { label: 'Enviada', value: 'SENT' },
@@ -60,29 +70,134 @@ export class QuotationFormComponent implements OnInit {
     { label: 'Rechazada', value: 'REJECTED' }
   ];
 
-  isEdit = false;
-
   get details() {
     return this.form.get('details') as FormArray;
   }
 
   ngOnInit() {
-    this.loadClients();
-    this.loadSkus();
     const id = this.route.snapshot.params['id'];
-    if (id) {
-      this.isEdit = true;
-      this.quotationService.getQuotationById(Number(id)).subscribe({
-        next: (quotation) => {
-          this.form.patchValue(quotation);
-          quotation.details.forEach(detail => this.addDetail(detail));
-        },
-        error: () => this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la cotización' })
-      });
-    } else {
-      this.setExpirationDate();
-      this.addDetail(); // Iniciar con una fila vacía
+    this.isEdit = !!id;
+    this.buttonLabel = this.isEdit ? 'Actualizar' : 'Guardar';
+
+    // Usamos setTimeout para mover la carga de datos al siguiente macrotask 
+    // y evitar el error NG0100 con los componentes de PrimeNG
+    setTimeout(() => {
+        this.loadClients();
+        this.loadWarehouses();
+        this.loadSkus().then(() => {
+            if (this.isEdit) {
+                this.quotationService.getQuotationById(Number(id)).subscribe({
+                    next: (quotation) => {
+                        this.form.patchValue(quotation);
+                        quotation.details.forEach(detail => this.addDetail(detail));
+                        this.initActions();
+                        if (quotation.status !== 'DRAFT') {
+                            this.form.disable();
+                        }
+                        this.cd.detectChanges();
+                    },
+                    error: () => this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la cotización' })
+                });
+            } else {
+                this.setExpirationDate();
+                this.addDetail();
+            }
+            this.isLoaded = true;
+            this.cd.detectChanges();
+        });
+    });
+  }
+
+  loadWarehouses() {
+    this.warehouseService.getWarehouses({}).subscribe(data => {
+      this.warehouses = data.results || data;
+      this.cd.detectChanges();
+    });
+  }
+
+  initActions() {
+    this.actionItems = [
+      {
+        label: 'Crear Pedido de Venta',
+        icon: 'pi pi-shopping-cart',
+        command: () => this.showWarehouseSelection()
+      },
+      {
+        label: 'Facturar Directamente',
+        icon: 'pi pi-file-invoice',
+        command: () => this.msg.add({ severity: 'info', summary: 'Info', detail: 'Funcionalidad próximamente' })
+      }
+    ];
+  }
+
+  showWarehouseSelection() {
+    if (this.warehouses.length === 0) {
+      this.msg.add({ severity: 'warn', summary: 'Atención', detail: 'No hay bodegas configuradas.' });
+      return;
     }
+
+    // Si solo hay una bodega, usarla directamente o preguntar igual para confirmar
+    if (this.warehouses.length === 1) {
+      this.confirmConversion(this.warehouses[0]);
+      return;
+    }
+
+    this.confirmationService.confirm({
+      header: 'Seleccionar Bodega de Despacho',
+      message: 'Por favor seleccione la bodega desde la cual se reservará el inventario.',
+      icon: 'pi pi-building',
+      acceptLabel: 'Confirmar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        // En una implementación real con PrimeNG ConfirmDialog, 
+        // podrías inyectar un componente o simplemente usar la primera por ahora 
+        // hasta que tengamos un diálogo de selección formal.
+        // Para este ERP, usaremos la primera bodega activa.
+        this.confirmConversion(this.warehouses[0]);
+      }
+    });
+  }
+
+  confirmConversion(warehouse: any) {
+    this.confirmationService.confirm({
+      message: `¿Desea convertir esta cotización en un Pedido de Venta usando la bodega "${warehouse.name}"?`,
+      header: 'Confirmar Conversión',
+      icon: 'pi pi-question-circle',
+      accept: () => this.convert(warehouse.id)
+    });
+  }
+
+  convert(warehouseId: number) {
+    const id = this.form.get('id')?.value;
+    this.quotationService.convertQuotation(id, warehouseId).subscribe({
+      next: (res) => {
+        // Asumiendo que el backend ahora devuelve el objeto o el número de documento
+        const msgDetail = res.document_number 
+          ? `Pedido ${res.document_number} generado exitosamente` 
+          : res.message;
+          
+        this.msg.add({ 
+          severity: 'success', 
+          summary: 'Conversión Exitosa', 
+          detail: msgDetail,
+          sticky: true 
+        });
+        
+        this.form.disable();
+        this.form.patchValue({ status: 'ACCEPTED' });
+        this.cd.detectChanges();
+        
+        // Redirigir después de un tiempo para que el usuario vea el número
+        setTimeout(() => {
+          if (res.sales_order_id) {
+            this.router.navigate(['/sales/sales-orders', res.sales_order_id]);
+          } else {
+            this.router.navigate(['/sales/sales-orders']);
+          }
+        }, 3000);
+      },
+      error: (err) => this.msg.add({ severity: 'error', summary: 'Error', detail: err.error.error || 'Error al convertir' })
+    });
   }
 
   setExpirationDate() {
@@ -100,8 +215,6 @@ export class QuotationFormComponent implements OnInit {
       this.confirmationService.confirm({
         message: '¿Deseas agregar otro material?',
         header: 'Confirmar',
-        acceptLabel: 'Sí',
-        rejectLabel: 'No',
         accept: () => {
           this.addDetail();
           setTimeout(() => {
@@ -117,11 +230,24 @@ export class QuotationFormComponent implements OnInit {
   }
 
   loadClients() {
-    this.clientService.getClients({}).subscribe(data => this.clients = data.results || data);
+    this.clientService.getClients({}).subscribe(data => {
+        this.clients = data.results || data;
+        this.cd.detectChanges();
+    });
   }
 
-  loadSkus() {
-    this.skuService.getSkus({}).subscribe(data => this.skus = data.results || data);
+  loadSkus(): Promise<any> {
+    return new Promise((resolve) => {
+        this.skuService.getSkus({}).subscribe(data => {
+            const rawSkus = data.results || data;
+            this.skus = rawSkus.map((sku: any) => ({
+                ...sku,
+                searchLabel: `${sku.code} - ${sku.name}`
+            }));
+            this.cd.detectChanges();
+            resolve(this.skus);
+        });
+    });
   }
 
   addDetail(detail?: QuotationDetail) {
@@ -146,7 +272,6 @@ export class QuotationFormComponent implements OnInit {
     const detail = this.details.at(index);
     const selectedSkuId = detail.get('sku')?.value;
     
-    // Validar duplicados
     const isDuplicate = this.details.controls.some((ctrl, i) => i !== index && ctrl.get('sku')?.value === selectedSkuId);
     
     if (isDuplicate) {
@@ -204,17 +329,32 @@ export class QuotationFormComponent implements OnInit {
       return;
     }
 
-    const quotation: Quotation = this.form.value;
+    const quotationValue = this.form.value;
+    quotationValue.subtotal = Number(Number(quotationValue.subtotal || 0).toFixed(4));
+    quotationValue.tax = Number(Number(quotationValue.tax || 0).toFixed(4));
+    quotationValue.total = Number(Number(quotationValue.total || 0).toFixed(4));
+    quotationValue.global_discount = Number(Number(quotationValue.global_discount || 0).toFixed(4));
+    quotationValue.details = quotationValue.details.map((d: any) => ({
+        ...d,
+        quantity: Number(Number(d.quantity || 0).toFixed(4)),
+        price: Number(Number(d.price || 0).toFixed(4)),
+        discount: Number(Number(d.discount || 0).toFixed(4)),
+        subtotal: Number(Number(d.subtotal || 0).toFixed(4))
+    }));
+
     const action = this.isEdit 
-      ? this.quotationService.updateQuotation(quotation) 
-      : this.quotationService.createQuotation(quotation);
+      ? this.quotationService.updateQuotation(quotationValue) 
+      : this.quotationService.createQuotation(quotationValue);
 
     action.subscribe({
-      next: () => {
+      next: (res) => {
         this.msg.add({ severity: 'success', summary: 'Éxito', detail: `Cotización ${this.isEdit ? 'actualizada' : 'registrada'}` });
+        if (!this.isEdit && res.id) {
+            window.open(`/api/sales/quotations/${res.id}/print/`, '_blank');
+        }
         setTimeout(() => this.router.navigate(['/sales/quotations']), 1000);
       },
-      error: (err) => this.msg.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar la cotización' })
+      error: () => this.msg.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar la cotización' })
     });
   }
 }

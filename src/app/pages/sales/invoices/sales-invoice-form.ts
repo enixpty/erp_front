@@ -35,6 +35,7 @@ export class SalesInvoiceFormComponent implements OnInit {
 
   form: FormGroup = this.fb.group({
     client: [null, Validators.required],
+    customer_name: [''],
     document_type: [null, Validators.required],
     warehouse_id: [null, Validators.required],
     due_date: [null, Validators.required],
@@ -43,8 +44,29 @@ export class SalesInvoiceFormComponent implements OnInit {
     tax: [0],
     total: [0],
     notes: [''],
+    send_by_email: [false],
+    email_target: [''],
     details: this.fb.array([])
   });
+
+  // Getter para tipos de documento filtrados
+  get filteredDocumentTypes() {
+    const client = this.clients.find(c => c.id === this.form.get('client')?.value);
+    if (!client) return [];
+    
+    // Filtrar documentos que NO sean nota de crédito y que coincidan con el término de pago del cliente
+    return this.documentTypes.filter(dt => 
+        dt.payment_term === client.payment_term && 
+        !dt.name.toLowerCase().includes('crédito') && 
+        !dt.name.toLowerCase().includes('nota')
+    );
+  }
+
+  // Getter para visibilidad de customer_name
+  get showCustomerName() {
+    const client = this.clients.find(c => c.id === this.form.get('client')?.value);
+    return client && client.payment_term === 'CASH';
+  }
 
   clients: any[] = [];
   skus: any[] = [];
@@ -163,11 +185,22 @@ export class SalesInvoiceFormComponent implements OnInit {
 
     this.invoiceService.createInvoice(this.form.value).subscribe({
       next: (res) => {
-        this.msg.add({ severity: 'success', summary: 'Éxito', detail: `Factura ${res.document_number} generada` });
-        window.open(`/api/sales/sales-invoices/${res.id}/print/`, '_blank');
+        if (res.status === 'PENDING_AUTHORIZATION') {
+           this.msg.add({ 
+             severity: 'warn', 
+             summary: 'Pendiente de Autorización', 
+             detail: `Factura ${res.document_number} creada, pero requiere autorización de un supervisor.` 
+           });
+        } else {
+           this.msg.add({ severity: 'success', summary: 'Éxito', detail: `Factura ${res.document_number} generada` });
+           window.open(`/api/sales/sales-invoices/${res.id}/print/`, '_blank');
+        }
         setTimeout(() => this.router.navigate(['/sales/invoices']), 1500);
       },
-      error: (err) => this.msg.add({ severity: 'error', summary: 'Error', detail: err.error.error || 'Error al facturar' })
+      error: (err) => {
+        const errorMsg = err.error.error || 'Error al facturar';
+        this.msg.add({ severity: 'error', summary: 'Error', detail: errorMsg });
+      }
     });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -45,6 +45,7 @@ export class ClientFormComponent implements OnInit {
   private msg = inject(MessageService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   form: FormGroup = this.fb.group({
     id: [null],
@@ -57,6 +58,8 @@ export class ClientFormComponent implements OnInit {
     parent: [null],
     payment_term: ['CASH', Validators.required],
     credit_days: [0],
+    credit_limit: [0, Validators.required],
+    require_authorization: [false],
     status: ['ACTIVE', Validators.required]
   });
 
@@ -100,11 +103,15 @@ export class ClientFormComponent implements OnInit {
 
   loadClientOptions() {
     this.clientService.getClients({}).subscribe(data => {
-        this.clientOptions = (data.results || data).filter((c: any) => 
-            c.id !== this.form.get('id')?.value && c.payment_term === 'CREDIT'
-        );
+        setTimeout(() => {
+            this.clientOptions = (data.results || data).filter((c: any) => 
+                c.id !== this.form.get('id')?.value && c.payment_term === 'CREDIT'
+            );
+            this.cdr.markForCheck();
+        });
     });
   }
+
 
   save() {
     if (this.form.invalid) {

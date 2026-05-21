@@ -1,0 +1,59 @@
+<div class="p-6 bg-surface-50 min-h-screen">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-surface-900 m-0">Kardex de Inventario</h1>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border border-surface-200 shadow-sm mb-6 flex gap-4 flex-wrap items-end">
+        <div class="flex flex-col gap-2 flex-1">
+            <label class="text-sm font-semibold">Producto (SKU)</label>
+            <p-select [options]="skus" [(ngModel)]="filters.sku" optionLabel="name" optionValue="id" [filter]="true" placeholder="Seleccionar producto..." class="w-full"></p-select>
+        </div>
+        <div class="flex flex-col gap-2 flex-1">
+            <label class="text-sm font-semibold">Bodega</label>
+            <p-select [options]="warehouses" [(ngModel)]="filters.warehouse" optionLabel="name" optionValue="id" placeholder="Seleccionar bodega..." class="w-full"></p-select>
+        </div>
+        <div class="flex flex-col gap-2 w-40">
+            <label class="text-sm font-semibold">Inicio</label>
+            <p-datepicker [(ngModel)]="filters.start_date" [showIcon]="true" class="w-full"></p-datepicker>
+        </div>
+        <div class="flex flex-col gap-2 w-40">
+            <label class="text-sm font-semibold">Fin</label>
+            <p-datepicker [(ngModel)]="filters.end_date" [showIcon]="true" class="w-full"></p-datepicker>
+        </div>
+        <p-button label="Consultar" icon="pi pi-filter" (onClick)="loadReport()" severity="primary"></p-button>
+    </div>
+
+    <div *ngIf="report" class="bg-white p-6 rounded-xl border border-surface-200 shadow-sm">
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-surface-100 p-4 rounded-lg">
+                <p class="text-xs uppercase text-surface-500">Saldo Inicial</p>
+                <h3 class="text-xl font-bold">{{report.initial_stock}}</h3>
+            </div>
+            <div class="bg-surface-100 p-4 rounded-lg">
+                <p class="text-xs uppercase text-surface-500">Saldo Final</p>
+                <h3 class="text-xl font-bold">{{report.final_stock}}</h3>
+            </div>
+        </div>
+
+        <p-table [value]="report.movements" [paginator]="true" [rows]="10">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Documento</th>
+                    <th>Cantidad</th>
+                    <th>Saldo</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-mov>
+                <tr>
+                    <td>{{mov.date}}</td>
+                    <td><span [ngClass]="mov.type === 'ENTRADA' ? 'text-green-600' : 'text-red-600'" class="font-bold">{{mov.type}}</span></td>
+                    <td>{{mov.doc}}</td>
+                    <td>{{mov.qty}}</td>
+                    <td>{{mov.balance}}</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>

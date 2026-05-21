@@ -7,6 +7,7 @@ import { MessageService } from 'primeng/api';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { DatePickerModule } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
@@ -15,7 +16,7 @@ import { ToastModule } from 'primeng/toast';
 @Component({
   selector: 'app-payment-application',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, CardModule, ButtonModule, InputTextModule, DatePickerModule, Select, TableModule, ToastModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, CardModule, ButtonModule, InputTextModule, InputNumberModule, DatePickerModule, Select, TableModule, ToastModule],
   providers: [MessageService],
   templateUrl: './payment-application.html'
 })
@@ -38,7 +39,8 @@ export class PaymentApplicationComponent implements OnInit {
 
   ngOnInit() {
     this.clientService.getClients({}).subscribe(data => {
-        this.clients = data.results || data;
+        const allClients = data.results || data;
+        this.clients = allClients.filter((c: any) => c.payment_term === 'CREDIT');
         this.cd.detectChanges();
     });
   }

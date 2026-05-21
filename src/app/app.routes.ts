@@ -64,6 +64,12 @@ export const routes: Routes = [
         canMatch: [AuthenticatedGuard],
     },
     {
+        path: 'audit',
+        loadChildren: () => import('./pages/admin/admin.routes').then(m => m.adminRoutes),
+        canMatch: [AuthenticatedGuard],
+
+    },
+    {
         path: '**',
         redirectTo: 'home'
     }

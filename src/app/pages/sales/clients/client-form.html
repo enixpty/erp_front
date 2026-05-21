@@ -92,6 +92,14 @@
                     <label for="credit_days" class="text-sm font-bold">Días de Vencimiento <span class="text-red-500">*</span></label>
                     <p-select [options]="creditDaysOptions" formControlName="credit_days" optionLabel="label" optionValue="value" placeholder="Seleccione Plazo" class="w-full"></p-select>
                 </div>
+                <div class="md:col-span-4 flex flex-col gap-2">
+                    <label for="credit_limit" class="text-sm font-bold">Límite de Crédito <span class="text-red-500">*</span></label>
+                    <input pInputText type="number" id="credit_limit" formControlName="credit_limit" class="w-full" />
+                </div>
+                <div class="md:col-span-4 flex items-center gap-2 mt-auto">
+                    <input type="checkbox" id="require_authorization" formControlName="require_authorization" class="p-checkbox" />
+                    <label for="require_authorization" class="text-sm font-bold">Requerir Autorización Siempre</label>
+                </div>
             }
 
             <!-- Botones de Acción -->

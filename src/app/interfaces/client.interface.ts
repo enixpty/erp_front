@@ -10,6 +10,8 @@ export interface Client {
     parent_name?: string;
     payment_term: 'CASH' | 'CREDIT';
     credit_days?: number;
+    credit_limit: number;
+    require_authorization: boolean;
     status: 'ACTIVE' | 'INACTIVE';
     created?: string;
     modified?: string;

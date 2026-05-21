@@ -1,0 +1,31 @@
+<p-toast />
+<div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <p-card header="Generar Corte" class="md:col-span-1">
+        <form [formGroup]="form" (ngSubmit)="generateCut()" class="flex flex-col gap-4">
+            <div class="flex flex-col gap-2">
+                <label for="cut_date" class="font-bold">Fecha de Corte</label>
+                <p-datepicker formControlName="cut_date" [showIcon]="true" placeholder="Seleccione fecha" class="w-full"></p-datepicker>
+            </div>
+            <p-button label="Ejecutar Generación" icon="pi pi-bolt" type="submit" [disabled]="form.invalid"></p-button>
+        </form>
+    </p-card>
+
+    <p-card header="Historial de Cortes" class="md:col-span-2">
+        <p-table [value]="cuts" [paginator]="true" [rows]="5">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Fecha Corte</th>
+                    <th>Balance</th>
+                    <th>Compañía</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-cut>
+                <tr>
+                    <td>{{cut.cut_date}}</td>
+                    <td>{{cut.balance | currency}}</td>
+                    <td>{{cut.company}}</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </p-card>
+</div>

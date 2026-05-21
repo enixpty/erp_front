@@ -11,7 +11,13 @@ import { ListStockLevelsComponent } from './stock-levels/list-stock-levels';
 import { InventorySkuComponent } from './inventory-sku/inventory-sku';
 import { AdjustmentFormComponent } from './adjustment/adjustment-form';
 
+import { KardexReportComponent } from './kardex/kardex-report';
+
 export const inventoryRoutes: Routes = [
+    {
+        path: 'kardex',
+        component: KardexReportComponent
+    },
     {
         path: 'adjustment',
         component: AdjustmentFormComponent

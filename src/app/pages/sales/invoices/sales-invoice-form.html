@@ -27,12 +27,25 @@
                     placeholder="Seleccione Cliente" [filter]="true" class="w-full"></p-select>
             </div>
 
-            <div class="md:col-span-3 flex flex-col gap-2">
-                <label class="text-xs font-bold text-surface-600 uppercase">Tipo de Documento</label>
-                <p-select [options]="documentTypes" formControlName="document_type" optionLabel="name" optionValue="id" 
-                    placeholder="Seleccione Tipo" class="w-full"></p-select>
+            <div class="md:col-span-3 flex flex-col gap-2" *ngIf="showCustomerName">
+                <label class="text-xs font-bold text-surface-600 uppercase">Nombre para Factura</label>
+                <input pInputText formControlName="customer_name" placeholder="Nombre (opcional)" class="w-full" />
             </div>
 
+            <div class="md:col-span-3 flex flex-col gap-2">
+                <label class="text-xs font-bold text-surface-600 uppercase">Email Destinatario</label>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" formControlName="send_by_email" id="send_by_email" class="p-checkbox" />
+                    <input pInputText formControlName="email_target" placeholder="Correo (opcional)" class="w-full" />
+                </div>
+            </div>
+
+            <div class="md:col-span-3 flex flex-col gap-2">
+                <label class="text-xs font-bold text-surface-600 uppercase">Tipo de Documento</label>
+                <p-select [options]="filteredDocumentTypes" formControlName="document_type" optionLabel="name" optionValue="id" 
+                    placeholder="Seleccione Tipo" class="w-full"></p-select>
+            </div>
+            
             <div class="md:col-span-3 flex flex-col gap-2">
                 <label class="text-xs font-bold text-surface-600 uppercase">Bodega de Despacho</label>
                 <p-select [options]="warehouses" formControlName="warehouse_id" optionLabel="name" optionValue="id" 
@@ -124,6 +137,10 @@
                         <span class="text-3xl font-black text-primary-600">{{form.get('total')?.value | currency}}</span>
                     </div>
                 </div>
+            </div>
+
+            <div class="md:col-span-12 flex justify-end pt-4">
+                <p-button label="Facturar" icon="pi pi-save" (onClick)="save()" severity="primary"></p-button>
             </div>
         </form>
     </p-card>

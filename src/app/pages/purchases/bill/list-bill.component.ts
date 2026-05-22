@@ -4,15 +4,19 @@ import { Customtable } from '@src/app/components/customTable/customtable';
 import { VendorInvoiceService } from '@src/app/services/vendor-invoice.service';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-list-bill',
   standalone: true,
-  imports: [CommonModule, Customtable, ButtonModule, CardModule],
+  imports: [CommonModule, Customtable, ButtonModule, CardModule, ToastModule],
+  providers: [MessageService],
   templateUrl: './list-bill.html'
 })
 export class ListBillComponent {
   private invoiceService = inject(VendorInvoiceService);
+  private msg = inject(MessageService);
   
   cols = [
     { field: 'id', header: 'ID' },
@@ -43,6 +47,17 @@ export class ListBillComponent {
     this.invoiceService.downloadInvoicePDF(id).subscribe(blob => {
       const url = window.URL.createObjectURL(blob);
       window.open(url);
+    });
+  }
+
+  sendEmail(id: number) {
+    this.invoiceService.sendInvoiceEmail(id).subscribe({
+      next: (res) => {
+        this.msg.add({ severity: 'success', summary: 'Correo Enviado', detail: res.message });
+      },
+      error: (err) => {
+        this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.error || 'No se pudo enviar el correo' });
+      }
     });
   }
 }

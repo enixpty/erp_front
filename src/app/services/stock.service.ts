@@ -11,4 +11,8 @@ export class StockService {
   getStockLevels(params: any): Observable<any> {
     return this.http.get<any>(this.url, { params });
   }
+
+  getValuation(): Observable<any> {
+    return this.http.get<any>(`${this.url}valuation/`);
+  }
 }

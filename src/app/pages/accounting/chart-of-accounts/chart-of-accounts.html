@@ -1,0 +1,57 @@
+<div class="p-4">
+  <p-card>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-surface-800">Catálogo de Cuentas</h2>
+      <div class="flex gap-2">
+        <p-button label="Cargar Catálogo Base" icon="pi pi-download" severity="info" (onClick)="loadDefaults()"></p-button>
+        <p-button label="Nueva Cuenta" icon="pi pi-plus" severity="primary" (onClick)="openNewAccount()"></p-button>
+      </div>
+    </div>
+
+    <app-customtable
+      #table
+      [genericCol]="cols"
+      [loaderFunction]="accountingService.getAccounts.bind(accountingService)"
+      titletable="Cuentas Contables">
+    </app-customtable>
+  </p-card>
+</div>
+
+<p-dialog [(visible)]="displayModal" header="Nueva Cuenta Contable" [modal]="true" [style]="{width: '500px'}" [breakpoints]="{'960px': '90vw'}">
+  <form [formGroup]="form" class="flex flex-col gap-5 p-2">
+    <div class="grid grid-cols-2 gap-4">
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-surface-700">Código</label>
+        <input pInputText formControlName="code" class="w-full">
+      </div>
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-surface-700">Nombre</label>
+        <input pInputText formControlName="name" class="w-full">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-surface-700">Tipo de Cuenta</label>
+        <p-select formControlName="account_type" [options]="accountTypes" class="w-full" placeholder="Seleccione..."></p-select>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-surface-700">Naturaleza</label>
+        <p-select formControlName="balance_type" [options]="balanceTypes" class="w-full" placeholder="Seleccione..."></p-select>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold text-surface-700">Cuenta Padre (opcional)</label>
+      <p-select formControlName="parent" [options]="accounts()" 
+      [appendTo]="'body'"
+      optionLabel="name" [filter]="true" class="w-full" placeholder="Seleccione una cuenta padre..."></p-select>
+    </div>
+
+    <div class="flex justify-end pt-4 border-t border-surface-200">
+      <p-button label="Cancelar" icon="pi pi-times" severity="secondary" text (onClick)="displayModal = false" class="mr-2"></p-button>
+      <p-button label="Guardar Cuenta" icon="pi pi-check" severity="primary" (onClick)="saveAccount()"></p-button>
+    </div>
+  </form>
+</p-dialog>
+<p-toast></p-toast>

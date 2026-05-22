@@ -12,6 +12,7 @@
 <ng-template #actions let-item>
     <div class="flex gap-1 justify-center" style="width: 140px;">
         <p-button icon="pi pi-file-pdf" severity="secondary" text size="small" pTooltip="Ver PDF" (onClick)="printPDF(item.id)"></p-button>
+        <p-button icon="pi pi-envelope" severity="success" text size="small" pTooltip="Enviar por Correo" (onClick)="sendEmail(item.id)"></p-button>
         @if (item.status === 'PENDING') {
             <p-button icon="pi pi-send" severity="secondary" size="small" pTooltip="Enviar a Validar" (onClick)="changeStatus(item, 'PENDING_VALIDATION')"></p-button>
         }
@@ -23,3 +24,4 @@
     </app-customtable>
   </p-card>
 </div>
+<p-toast></p-toast>

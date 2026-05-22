@@ -14,8 +14,8 @@
     <div class="bg-white p-2 rounded-2xl border border-surface-200 shadow-sm">
         <app-customtable 
             titletable="Historial de Movimientos"
-            apiEndpoint="/api/audit/logs/" 
-            [columns]="cols">
+            [loaderFunction]="auditService.getLogs.bind(auditService)"
+            [genericCol]="cols">
         </app-customtable>
     </div>
 </div>

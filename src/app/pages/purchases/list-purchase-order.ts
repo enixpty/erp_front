@@ -143,4 +143,15 @@ export class ListPurchaseOrderComponent implements OnInit {
       window.URL.revokeObjectURL(url);
     });
   }
+
+  sendEmail(id: any) {
+    this.poService.sendOrderEmail(id).subscribe({
+      next: (res) => {
+        this.msg.add({ severity: 'success', summary: 'Correo Enviado', detail: res.message });
+      },
+      error: (err) => {
+        this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.error || 'No se pudo enviar el correo' });
+      }
+    });
+  }
 }

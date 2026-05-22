@@ -64,6 +64,11 @@ export const routes: Routes = [
         canMatch: [AuthenticatedGuard],
     },
     {
+        path: 'accounting',
+        loadChildren: () => import('./pages/accounting/accounting.routes').then(m => m.accountingRoutes),
+        canMatch: [AuthenticatedGuard],
+    },
+    {
         path: 'audit',
         loadChildren: () => import('./pages/admin/admin.routes').then(m => m.adminRoutes),
         canMatch: [AuthenticatedGuard],

@@ -156,4 +156,16 @@ export class OrderFormComponent implements OnInit {
         a.click();
     });
   }
+
+  sendEmail() {
+    const id = this.order().id;
+    this.poService.sendOrderEmail(id).subscribe({
+      next: (res) => {
+        this.msg.add({ severity: 'success', summary: 'Correo Enviado', detail: res.message });
+      },
+      error: (err) => {
+        this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.error || 'No se pudo enviar el correo' });
+      }
+    });
+  }
 }

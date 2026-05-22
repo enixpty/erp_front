@@ -1,0 +1,34 @@
+<div class="p-4 flex flex-col gap-6">
+  <div class="flex justify-between items-center">
+    <h2 class="text-2xl font-bold">Reportes Financieros</h2>
+    <p-button label="Actualizar" icon="pi pi-refresh" (onClick)="loadReports()"></p-button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="flex justify-center items-center h-40">
+      <p-progressSpinner styleClass="w-8 h-8"></p-progressSpinner>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      @if (incomeStatement(); as data) {
+        <p-card header="Estado de Resultados">
+          <div class="flex flex-col gap-2 text-lg">
+            <div class="flex justify-between"><span>Ingresos:</span> <span>{{ data.revenue | currency }}</span></div>
+            <div class="flex justify-between"><span>Gastos:</span> <span>{{ data.expenses | currency }}</span></div>
+            <div class="flex justify-between font-bold border-t pt-2"><span>Utilidad Neta:</span> <span>{{ data.net_income | currency }}</span></div>
+          </div>
+        </p-card>
+      }
+
+      @if (balanceSheet(); as data) {
+        <p-card header="Balance de Situación">
+          <div class="flex flex-col gap-2 text-lg">
+            <div class="flex justify-between"><span>Activos:</span> <span>{{ data.assets | currency }}</span></div>
+            <div class="flex justify-between"><span>Pasivos:</span> <span>{{ data.liabilities | currency }}</span></div>
+            <div class="flex justify-between font-bold border-t pt-2"><span>Patrimonio:</span> <span>{{ data.equity | currency }}</span></div>
+          </div>
+        </p-card>
+      }
+    </div>
+  }
+</div>

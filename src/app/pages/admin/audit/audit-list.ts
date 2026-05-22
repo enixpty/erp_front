@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { Customtable } from '@src/app/components/customTable/customtable';
+import { AuditService } from '@src/app/services/audit.service';
 
 @Component({
   selector: 'app-audit-list',
@@ -10,6 +11,8 @@ import { Customtable } from '@src/app/components/customTable/customtable';
   templateUrl: './audit-list.html'
 })
 export class AuditListComponent {
+  public auditService = inject(AuditService);
+
   cols = [
     { field: 'timestamp', header: 'Fecha' },
     { field: 'user_name', header: 'Usuario' },

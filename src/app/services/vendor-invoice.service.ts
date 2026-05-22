@@ -21,6 +21,10 @@ export class VendorInvoiceService {
     return this.http.get(`${this.url}${id}/pdf/`, { responseType: 'blob' });
   }
 
+  sendInvoiceEmail(id: number, email?: string): Observable<any> {
+    return this.http.post(`${this.url}${id}/send_by_email/`, { email });
+  }
+
   changeStatus(id: number, status: string): Observable<any> {
     return this.http.post(`${this.url}${id}/change_status/`, { status });
   }

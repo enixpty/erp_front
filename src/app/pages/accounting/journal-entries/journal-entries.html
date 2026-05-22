@@ -1,0 +1,35 @@
+<div class="p-4">
+  <p-card>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-surface-800">Asientos Contables</h2>
+      <p-button label="Nuevo Asiento" icon="pi pi-plus" [routerLink]="['/accounting/entries/new']"></p-button>
+    </div>
+
+    <app-customtable
+      [genericCol]="cols"
+      [loaderFunction]="accountingService.getJournalEntries.bind(accountingService)"
+      [actionsTemplate]="actions"
+      [columnTemplates]="columnTemplates"
+      titletable="Libro Diario">
+    </app-customtable>
+  </p-card>
+</div>
+
+<ng-template #statusTemplate let-item>
+  <span [class]="'px-2 py-1 rounded text-xs font-bold ' + 
+    (item.status === 'POSTED' ? 'bg-green-100 text-green-700' : 
+     item.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')">
+    {{ item.status }}
+  </span>
+</ng-template>
+
+<ng-template #actions let-item>
+  <div class="flex gap-2">
+    <p-button icon="pi pi-eye" [text]="true" pTooltip="Ver Detalle" [routerLink]="['/accounting/entries', item.id]"></p-button>
+    @if (item.status === 'DRAFT') {
+      <p-button icon="pi pi-check-circle" [text]="true" severity="success" pTooltip="Asentar Asiento" (onClick)="postEntry(item.id)"></p-button>
+    }
+  </div>
+</ng-template>
+
+<p-toast></p-toast>

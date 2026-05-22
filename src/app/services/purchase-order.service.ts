@@ -32,4 +32,8 @@ export class PurchaseOrderService {
   printOrderPDF(id: any): Observable<Blob> {
     return this.http.get(`${this.url}${id}/pdf/`, { responseType: 'blob' });
   }
+
+  sendOrderEmail(id: any, email?: string): Observable<any> {
+    return this.http.post(`${this.url}${id}/send_by_email/`, { email });
+  }
 }

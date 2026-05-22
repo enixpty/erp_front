@@ -1,0 +1,45 @@
+<div class="p-4">
+  <p-card header="Nuevo Asiento Contable">
+    <form [formGroup]="form" class="flex flex-col gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="flex flex-col gap-2">
+          <label class="font-bold text-sm">Fecha</label>
+          <input type="date" pInputText formControlName="date">
+        </div>
+        <div class="flex flex-col gap-2 col-span-2">
+          <label class="font-bold text-sm">Descripción</label>
+          <input pInputText formControlName="description" placeholder="Descripción general del asiento">
+        </div>
+      </div>
+      
+      <div class="flex flex-col gap-3" formArrayName="lines">
+        <div class="font-bold text-lg border-b pb-2">Líneas del Asiento</div>
+        @for (line of lines.controls; track $index) {
+          <div [formGroupName]="$index" class="grid grid-cols-12 gap-3 items-center p-2 bg-surface-50 rounded">
+            <div class="col-span-4">
+              <p-select formControlName="account_id" [options]="accounts()" optionLabel="name" optionValue="id" [filter]="true" placeholder="Cuenta" class="w-full"></p-select>
+            </div>
+            <div class="col-span-2">
+              <p-inputNumber formControlName="debit" mode="decimal" placeholder="Débito" class="w-full"></p-inputNumber>
+            </div>
+            <div class="col-span-2">
+              <p-inputNumber formControlName="credit" mode="decimal" placeholder="Crédito" class="w-full"></p-inputNumber>
+            </div>
+            <div class="col-span-3">
+              <input pInputText formControlName="description" placeholder="Glosa" class="w-full">
+            </div>
+            <div class="col-span-1 text-center">
+              <p-button icon="pi pi-trash" severity="danger" text (onClick)="removeLine($index)"></p-button>
+            </div>
+          </div>
+        }
+      </div>
+      
+      <div class="flex gap-2">
+        <p-button label="Agregar Línea" icon="pi pi-plus" severity="secondary" (onClick)="addLine()"></p-button>
+        <p-button label="Guardar Asiento" icon="pi pi-check" severity="primary" (onClick)="save()"></p-button>
+      </div>
+    </form>
+  </p-card>
+</div>
+<p-toast></p-toast>

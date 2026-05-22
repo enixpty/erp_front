@@ -1,0 +1,34 @@
+@if (entry$ | async; as entry) {
+  <div class="p-4">
+    <p-card header="Detalle de Asiento: {{ entry.id }}">
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div><strong>Fecha:</strong> {{ entry.date }}</div>
+        <div><strong>Estado:</strong> {{ entry.status }}</div>
+        <div class="col-span-2"><strong>Descripción:</strong> {{ entry.description }}</div>
+      </div>
+
+      <table class="w-full border-collapse border border-surface-200">
+        <thead class="bg-surface-100">
+          <tr>
+            <th class="p-2 border">Cuenta</th>
+            <th class="p-2 border">Débito</th>
+            <th class="p-2 border">Crédito</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of entry.lines; track line.id) {
+            <tr>
+              <td class="p-2 border">{{ line.account_code }} - {{ line.account_name }}</td>
+              <td class="p-2 border text-right">{{ line.debit }}</td>
+              <td class="p-2 border text-right">{{ line.credit }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="mt-4">
+        <p-button label="Volver" icon="pi pi-arrow-left" [routerLink]="['/accounting/entries']"></p-button>
+      </div>
+    </p-card>
+  </div>
+}

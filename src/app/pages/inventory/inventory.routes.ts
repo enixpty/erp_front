@@ -12,11 +12,16 @@ import { InventorySkuComponent } from './inventory-sku/inventory-sku';
 import { AdjustmentFormComponent } from './adjustment/adjustment-form';
 
 import { KardexReportComponent } from './kardex/kardex-report';
+import { ValuationReportComponent } from './valuation/valuation-report';
 
 export const inventoryRoutes: Routes = [
     {
         path: 'kardex',
         component: KardexReportComponent
+    },
+    {
+        path: 'valuation',
+        component: ValuationReportComponent
     },
     {
         path: 'adjustment',

@@ -18,8 +18,11 @@
     <a [routerLink]="['/purchases/order', po.id]" class="text-blue-500 hover:underline  "> {{ po.id }}</a>
     </ng-template>
     <ng-template #actionTemplate let-po>
-    <div class="flex gap-2">
+    <div class="flex gap-1">
       <p-button icon="pi pi-file-pdf" pTooltip="Imprimir OC" text (onClick)="downloadPdf(po.id)"></p-button>
+      @if (po.status === 'CONFIRMED') {
+          <p-button icon="pi pi-envelope" pTooltip="Enviar a Proveedor" text severity="success" (onClick)="sendEmail(po.id)"></p-button>
+      }
       @if (po.status === 'DRAFT') {
           <p-button icon="pi pi-check" pTooltip="Confirmar Orden" text severity="success" (onClick)="confirmOrder(po.id)"></p-button>
       }

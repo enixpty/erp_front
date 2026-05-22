@@ -27,10 +27,10 @@ export class Customtable {
   @Input() data: any[] = [];
   @Input() columns: any[] = [];
   @Input() totalRecords: number = 0;
-  @Input() loading: boolean = false;
+  @Input() loading = signal<boolean>(false);
   
   totalCount = signal<number>(0) 
-  genericData = signal<[]>([])  
+  genericData = signal<any[]>([])  
   isloading = signal<boolean>(true)
 
   onSelectionChange(event: any) {

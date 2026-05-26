@@ -1,8 +1,14 @@
 @if (receipt()) {
   <div class="p-4">
-    <p-card header="Registrar Factura de Proveedor">
+    <p-card>
+      <ng-template pTemplate="header">
+        <div class="p-4 bg-primary-50 border-bottom-1 surface-border">
+           <h2 class="m-0 text-xl font-bold text-primary-900">Registrar Factura de Proveedor</h2>
+           <p class="m-0 text-sm text-primary-700">Proveedor: <strong>{{ receipt().supplier_name }}</strong> | Recepción: <strong>#{{ receipt().id }}</strong></p>
+        </div>
+      </ng-template>
       <form [formGroup]="form" (ngSubmit)="save()">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div class="mb-4">
               <label class="block mb-2 font-bold">Número de Factura</label>
               <input pInputText formControlName="invoice_number" class="w-full" required>
@@ -23,7 +29,8 @@
       </form>
     </p-card>
   </div>
-} @else {
+}
+ @else {
   <div class="p-4">
     <p-card header="Registrar Factura de Proveedor">
       <p>No se ha seleccionado una recepción válida.</p>
@@ -31,4 +38,4 @@
     </p-card>
   </div>
 }
-<p-toast></p-toast>
+

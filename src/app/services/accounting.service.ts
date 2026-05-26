@@ -17,6 +17,14 @@ export class AccountingService {
     return this.http.post(`${this.url}/accounts/`, data);
   }
 
+  updateAccount(id: any, data: any): Observable<any> {
+    return this.http.put(`${this.url}/accounts/${id}/`, data);
+  }
+
+  deleteAccount(id: any): Observable<any> {
+    return this.http.delete(`${this.url}/accounts/${id}/`);
+  }
+
   loadDefaultAccounts(): Observable<any> {
     return this.http.post(`${this.url}/accounts/load_defaults/`, {});
   }
@@ -57,5 +65,32 @@ export class AccountingService {
 
   getBalanceSheet(params: any): Observable<any> {
     return this.http.get(`${this.url}/reports/balance_sheet/`, { params });
+  }
+
+  // Mappings
+  getMappings(params?: any): Observable<any> {
+    return this.http.get<any>(`${this.url}/mappings/`, { params });
+  }
+
+  getEventTypes(): Observable<any> {
+    return this.http.get<any>(`${this.url}/mappings/event_types/`);
+  }
+
+  createMapping(data: any): Observable<any> {
+    return this.http.post(`${this.url}/mappings/`, data);
+  }
+
+  updateMapping(id: any, data: any): Observable<any> {
+    return this.http.put(`${this.url}/mappings/${id}/`, data);
+  }
+
+  deleteMapping(id: any): Observable<any> {
+    return this.http.delete(`${this.url}/mappings/${id}/`);
+  }
+
+  validateSetup(category: string, docTypeId?: any): Observable<any> {
+    const params: any = { category };
+    if (docTypeId) params.document_type = docTypeId;
+    return this.http.get<any>(`${this.url}/mappings/validate_setup/`, { params });
   }
 }

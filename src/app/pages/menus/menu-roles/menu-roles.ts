@@ -34,8 +34,7 @@ import { MenuServices } from '@src/app/services/menu';
   selector: 'app-menu-roles',
   imports: [CardModule, ButtonModule, FormsModule, Toast, Checkbox],
   templateUrl: './menu-roles.html',
-  styleUrl: './menu-roles.css',
-  providers: [MessageService],
+  styleUrl: './menu-roles.css'
 })
 export class MenuRoles {
   private messageService = inject(MessageService);

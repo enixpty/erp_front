@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, ChangeDetectorRef, NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Customtable } from '@src/app/components/customTable/customtable';
 import { SalesInvoiceService } from '@src/app/services/sales-invoice.service';
@@ -11,7 +11,6 @@ import { TagModule } from 'primeng/tag';
   selector: 'app-list-sales-invoice',
   standalone: true,
   imports: [CommonModule, Customtable, RouterLink, ButtonModule, CardModule, TagModule],
-  schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './list-sales-invoice.html'
 })
 export class ListSalesInvoiceComponent implements OnInit {
@@ -23,12 +22,12 @@ export class ListSalesInvoiceComponent implements OnInit {
   loading = signal<boolean>(false);
 
   columns = [
-    { field: 'document_number', header: 'N° Factura', sortable: true },
-    { field: 'client_name', header: 'Cliente', sortable: true },
-    { field: 'date', header: 'Fecha', sortable: true },
-    { field: 'due_date', header: 'Vencimiento', sortable: true },
-    { field: 'total', header: 'Total', sortable: true, type: 'currency' },
-    { field: 'status_display', header: 'Estado', sortable: true, template: 'status' },
+    { field: 'document_number', header: 'N° Factura', sortable: true, filter: true },
+    { field: 'client_name', header: 'Cliente', sortable: true, filter: true },
+    { field: 'date', header: 'Fecha', sortable: true, filter: true },
+    { field: 'due_date', header: 'Vencimiento', sortable: true, filter: true },
+    { field: 'total', header: 'Total', sortable: true, type: 'currency', filter: true },
+    { field: 'status_display', header: 'Estado', sortable: true, template: 'status', filter: true },
     { field: 'actions', header: 'Acciones', template: 'actions' }
   ];
 

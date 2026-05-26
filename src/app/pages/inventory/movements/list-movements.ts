@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { Customtable } from '@src/app/components/customTable/customtable';
 import { StockMovementService } from '@src/app/services/stock-movement.service';
 import { TagModule } from 'primeng/tag';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-list-movements',
@@ -11,21 +12,31 @@ import { TagModule } from 'primeng/tag';
   imports: [CommonModule, CardModule, Customtable, TagModule],
   templateUrl: './list-movements.html'
 })
-export class ListMovementsComponent {
-  public movementService = inject(StockMovementService);
+export class ListMovementsComponent implements OnInit {
+  private movementService = inject(StockMovementService);
+
+  movements = signal<any[]>([]);
 
   cols = [
-    { field: 'created', header: 'Fecha' },
-    { field: 'sku_code', header: 'SKU' },
-    { field: 'sku_name', header: 'Descripción' },
-    { field: 'movement_type_name', header: 'Tipo' },
-    { field: 'quantity', header: 'Cantidad' },
-    { field: 'warehouse_source_name', header: 'Origen' },
-    { field: 'warehouse_destination_name', header: 'Destino' },
-    { field: 'document_reference', header: 'Referencia' }
+    { field: 'created', header: 'Fecha', filter: true },
+    { field: 'sku_code', header: 'SKU', filter: true },
+    { field: 'sku_name', header: 'Descripción' , filter: true},
+    { field: 'movement_type_name', header: 'Tipo' , filter: true},
+    { field: 'quantity', header: 'Cantidad' , filter: true},
+    { field: 'warehouse_source_name', header: 'Origen', filter: true },
+    { field: 'warehouse_destination_name', header: 'Destino' , filter: true},
+    { field: 'document_reference', header: 'Referencia' , filter: true}
   ];
 
-  loadMovements = (params: any) => this.movementService.getStockMovements(params);
+  ngOnInit() {
+    this.loadMovements({});
+  }
+
+  loadMovements(params: any) {
+    this.movementService.getStockMovements(params).subscribe(res => {
+        this.movements.set(res.results || res);
+    });
+  }
 
   getSeverity(direction: string) {
     switch (direction) {
@@ -36,3 +47,4 @@ export class ListMovementsComponent {
     }
   }
 }
+

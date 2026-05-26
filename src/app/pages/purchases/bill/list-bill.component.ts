@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Customtable } from '@src/app/components/customTable/customtable';
 import { VendorInvoiceService } from '@src/app/services/vendor-invoice.service';
@@ -11,13 +11,14 @@ import { MessageService } from 'primeng/api';
   selector: 'app-list-bill',
   standalone: true,
   imports: [CommonModule, Customtable, ButtonModule, CardModule, ToastModule],
-  providers: [MessageService],
   templateUrl: './list-bill.html'
 })
-export class ListBillComponent {
+export class ListBillComponent implements OnInit {
   private invoiceService = inject(VendorInvoiceService);
   private msg = inject(MessageService);
   
+  invoices = signal<any[]>([]);
+
   cols = [
     { field: 'id', header: 'ID' },
     { field: 'invoice_number', header: 'Número Factura' },
@@ -25,10 +26,18 @@ export class ListBillComponent {
     { field: 'supplier_name', header: 'Proveedor' },
     { field: 'total_amount', header: 'Total' },
     { field: 'status', header: 'Estado' },
-    { field: 'action', header: 'Acciones' }
+    { field: 'actions', header: 'Acciones' }
   ];
 
-  loadInvoices = (params: any) => this.invoiceService.getInvoices(params);
+  ngOnInit() {
+      this.loadInvoices({});
+  }
+
+  loadInvoices(params: any) {
+    this.invoiceService.getInvoices(params).subscribe(res => {
+        this.invoices.set(res.results || res);
+    });
+  }
 
   changeStatus(invoice: any, status: string) {
     console.log('Cambiando estado de factura:', invoice.id, 'a:', status);

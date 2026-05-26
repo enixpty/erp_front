@@ -16,11 +16,11 @@ export class ListCreditNoteComponent {
   private creditNoteService = inject(CreditNoteService);
   
   columns = [
-    { field: 'document_number', header: 'N° NC', sortable: true },
-    { field: 'invoice_number', header: 'Factura Ref.', sortable: true },
-    { field: 'date', header: 'Fecha', sortable: true },
-    { field: 'reason', header: 'Motivo', sortable: true },
-    { field: 'total', header: 'Total', sortable: true, type: 'currency' },
+    { field: 'document_number', header: 'N° NC', sortable: true , filter: true},
+    { field: 'invoice_number', header: 'Factura Ref.', sortable: true , filter: true},
+    { field: 'date', header: 'Fecha', sortable: true , filter: true},
+    { field: 'reason', header: 'Motivo', sortable: true , filter: true},
+    { field: 'total', header: 'Total', sortable: true, type: 'currency', filter: true },
     { field: 'actions', header: 'Acciones', template: 'actions' }
   ];
 

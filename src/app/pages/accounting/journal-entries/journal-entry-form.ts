@@ -15,7 +15,6 @@ import { Router } from '@angular/router';
   selector: 'app-journal-entry-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, SelectModule, InputNumberModule, InputTextModule, ToastModule],
-  providers: [MessageService],
   templateUrl: './journal-entry-form.html'
 })
 export class JournalEntryFormComponent implements OnInit {

@@ -13,7 +13,6 @@ import { HttpClient } from '@angular/common/http';
   selector: 'app-account-statement-cut',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, DatePicker, Toast, TableModule],
-  providers: [MessageService],
   templateUrl: './account-statement-cut.html'
 })
 export class AccountStatementCutComponent implements OnInit {

@@ -19,7 +19,6 @@ import { Warehouse } from '@src/app/interfaces/warehouse.interface';
   selector: 'app-receipt-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, SelectModule, InputNumberModule, ToastModule, FieldsetModule, InputTextModule, RouterLink],
-  providers: [MessageService],
   templateUrl: './receipt-form.html'
 })
 export class ReceiptFormComponent implements OnInit {

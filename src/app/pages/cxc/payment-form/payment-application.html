@@ -1,4 +1,4 @@
-<p-toast />
+
 <div class="p-6 bg-surface-100 min-h-screen">
     <p-card styleClass="shadow-xl border-t-4 border-t-primary rounded-2xl">
         <ng-template pTemplate="header">
@@ -9,14 +9,40 @@
                     </div>
                     <div>
                         <h2 class="text-2xl font-bold text-primary-900 m-0">Aplicación de Pagos</h2>
-                        <p class="text-primary-700 m-0 text-sm opacity-80">Registrar y distribuir pagos recibidos</p>
+                        <p class="text-primary-700 m-0 text-sm opacity-80">Registrar y distribuir pagos recibidos</p>        
                     </div>
-                </div>
-                <p-button label="Confirmar Aplicación" icon="pi pi-check" (onClick)="apply()" severity="success"></p-button>
-            </div>
-        </ng-template>
+                    </div>
+                    <p-button label="Confirmar Aplicación" icon="pi pi-check" (onClick)="apply()" severity="success" [disabled]="!mappingValid() || remainingAmount < 0 || remainingAmount != 0 && (form.get('amount')?.value > 0)"></p-button>
+                    </div>
+                    </ng-template>
 
-        <form [formGroup]="form" class="grid grid-cols-1 md:grid-cols-4 gap-6 p-4">
+                    <!-- Mensaje de Advertencia Contable -->
+                    @if (!mappingValid()) {
+                    <div class="p-6">
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg flex items-center gap-3">
+                        <i class="pi pi-exclamation-triangle text-red-600 text-xl"></i>
+                        <div>
+                            <h4 class="text-red-800 font-bold m-0">Configuración Contable Requerida</h4>
+                            <p class="text-red-700 m-0 text-sm">Falta configurar las cuentas para cobros a clientes.</p>
+                        </div>
+                    </div>
+                    </div>
+                    }
+
+                    <!-- Error de Validación de Montos -->
+                    @if (remainingAmount < 0) {
+                    <div class="p-6">
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg flex items-center gap-3">
+                        <i class="pi pi-times-circle text-red-600 text-xl"></i>
+                        <div>
+                            <h4 class="text-red-800 font-bold m-0">Error en Montos</h4>
+                            <p class="text-red-700 m-0 text-sm">La suma aplicada excede el monto recibido por <b>{{ remainingAmount * -1 | currency }}</b>.</p>
+                        </div>
+                    </div>
+                    </div>
+                    }
+                    <form [formGroup]="form" class="grid grid-cols-1 md:grid-cols-4 gap-6 p-4">
+
             <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-surface-600 uppercase">Cliente Principal</label>
                 <p-select [options]="clients" formControlName="client_id" optionLabel="first_name" optionValue="id" 

@@ -35,12 +35,11 @@ import { AttributeValue } from '@src/app/interfaces/attribute.interface';
     ReactiveFormsModule, ToggleButtonModule, TooltipModule, ToastModule, 
     ConfirmDialogModule, Customtable, SelectModule, TabsModule, InputNumberModule, MultiSelectModule, Checkbox
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './list-product.html'
 })
 export class ListProductComponent implements OnInit {
   @ViewChild('productTable') customTableComponent!: Customtable;
-  
+
   public productService = inject(ProductService);
   private brandService = inject(BrandService);
   private categoryService = inject(CategoryService);
@@ -49,14 +48,15 @@ export class ListProductComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private fb = inject(FormBuilder);
-  
+
   displayModal = signal<boolean>(false);
   displaySkuModal = signal<boolean>(false);
   displayEanModal = signal<boolean>(false);
   submitting = signal<boolean>(false);
   submittingSku = signal<boolean>(false);
   isEdit = signal<boolean>(false);
-  
+
+  products = signal<Product[]>([]);
   brands = signal<Brand[]>([]);
   categories = signal<Category[]>([]);
   attrValues = signal<AttributeValue[]>([]);
@@ -64,44 +64,12 @@ export class ListProductComponent implements OnInit {
   selectedProduct = signal<Product | null>(null);
   selectedSku = signal<SKU | null>(null);
 
-  // ...
-
-  openEanModal(sku: SKU) {
-    this.selectedSku.set(sku);
-    this.displayEanModal.set(true);
-  }
-
-  addEan(input: HTMLInputElement) {
-    if (!input.value || !this.selectedSku()) return;
-    this.skuService.createEan({ sku: this.selectedSku()!.id!, code: input.value, is_main: false }).subscribe(() => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'EAN agregado' });
-        input.value = '';
-        this.loadSkusWithUpdate(this.selectedSku()!.id!);
-    });
-  }
-
-  deleteEan(ean: any) {
-    this.skuService.deleteEan(ean.id).subscribe(() => {
-        this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'EAN borrado' });
-        this.loadSkusWithUpdate(this.selectedSku()!.id!);
-    });
-  }
-
-  private loadSkusWithUpdate(skuId: number | string) {
-    this.loadSkus();
-    this.skuService.getSkusByProduct(this.selectedProduct()?.id).subscribe(resp => {
-        const skus = Array.isArray(resp) ? resp : (resp.results || []);
-        const updatedSku = skus.find((s: SKU) => s.id === skuId);
-        if (updatedSku) this.selectedSku.set(updatedSku);
-    });
-  }
-
   cols = [
     { field: 'name', header: 'Nombre', order: true, filter: true },
     { field: 'brand_name', header: 'Marca', order: true, filter: true },
     { field: 'category_name', header: 'Categoría', order: true, filter: true },
     { field: 'status', header: 'Estado', order: true, filter: true },
-    { field: 'action', header: '', order: false, filter: false }
+    { field: 'actions', header: 'Acciones', order: false, filter: false }
   ];
 
   form: FormGroup;
@@ -133,6 +101,13 @@ export class ListProductComponent implements OnInit {
 
   ngOnInit() {
     this.loadSelectData();
+    this.loadProducts();
+  }
+
+  loadProducts() {
+    this.productService.getProducts({rows: 1000}).subscribe(resp => {
+        this.products.set(resp.results || resp);
+    });
   }
 
   loadSelectData() {
@@ -182,6 +157,7 @@ export class ListProductComponent implements OnInit {
   openNew() {
     this.isEdit.set(false);
     this.selectedProduct.set(null);
+    this.skus.set([]); 
     this.form.reset({ status: true });
     this.displayModal.set(true);
   }
@@ -270,5 +246,35 @@ export class ListProductComponent implements OnInit {
     if (this.customTableComponent) {
       this.customTableComponent.onRefresh();
     }
+  }
+
+  openEanModal(sku: SKU) {
+    this.selectedSku.set(sku);
+    this.displayEanModal.set(true);
+  }
+
+  addEan(input: HTMLInputElement) {
+    if (!input.value || !this.selectedSku()) return;
+    this.skuService.createEan({ sku: this.selectedSku()!.id!, code: input.value, is_main: false }).subscribe(() => {
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'EAN agregado' });
+        input.value = '';
+        this.loadSkusWithUpdate(this.selectedSku()!.id!);
+    });
+  }
+
+  deleteEan(ean: any) {
+    this.skuService.deleteEan(ean.id).subscribe(() => {
+        this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'EAN borrado' });
+        this.loadSkusWithUpdate(this.selectedSku()!.id!);
+    });
+  }
+
+  private loadSkusWithUpdate(skuId: number | string) {
+    this.loadSkus();
+    this.skuService.getSkusByProduct(this.selectedProduct()?.id).subscribe(resp => {
+        const skus = Array.isArray(resp) ? resp : (resp.results || []);
+        const updatedSku = skus.find((s: SKU) => s.id === skuId);
+        if (updatedSku) this.selectedSku.set(updatedSku);
+    });
   }
 }

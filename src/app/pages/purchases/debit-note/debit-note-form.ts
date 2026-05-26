@@ -26,7 +26,6 @@ import { VendorInvoiceService } from '@src/app/services/vendor-invoice.service';
     ToastModule, 
     RouterLink
   ],
-  providers: [MessageService],
   templateUrl: './debit-note-form.html'
 })
 export class DebitNoteFormComponent implements OnInit {

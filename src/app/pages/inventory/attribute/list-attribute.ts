@@ -23,7 +23,6 @@ import { Attribute, AttributeValue } from '@src/app/interfaces/attribute.interfa
     ReactiveFormsModule, ToggleButtonModule, TooltipModule, ToastModule, 
     ConfirmDialogModule, Customtable, SelectModule
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './list-attribute.html'
 })
 export class ListAttributeComponent implements OnInit {

@@ -13,7 +13,6 @@ import { AccountingService } from '@src/app/services/accounting.service';
   selector: 'app-journal-entries',
   standalone: true,
   imports: [CommonModule, RouterLink, CardModule, ButtonModule, ToastModule, TooltipModule, Customtable],
-  providers: [MessageService],
   templateUrl: './journal-entries.html'
 })
 export class JournalEntriesComponent implements OnInit {

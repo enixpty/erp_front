@@ -10,6 +10,7 @@ import {  NgTemplateOutlet } from '@angular/common';
 export type ArrayServicesLoader = (params: any) => Observable<any>;
 @Component({
   selector: 'app-customtable',
+  standalone: true,
   imports: [TableModule, ButtonModule, NgTemplateOutlet, TooltipModule],
   templateUrl: './customtable.html',
   styleUrl: './customtable.css',
@@ -27,7 +28,7 @@ export class Customtable {
   @Input() data: any[] = [];
   @Input() columns: any[] = [];
   @Input() totalRecords: number = 0;
-  @Input() loading = signal<boolean>(false);
+  @Input() loading: boolean = false;
   
   totalCount = signal<number>(0) 
   genericData = signal<any[]>([])  
@@ -52,30 +53,7 @@ export class Customtable {
   }
 
   ngOnInit(){
-    if (this.loaderFunction) {
-      const params = {
-        page: 1, 
-        rows: 10, 
-        filters: [], 
-        sort: 1,      // sort -> asc/desc/null
-        sortField: undefined  // field name to sort data
-      }; 
-        console.log("Customtable: Executing loaderFunction...");
-        this.loaderFunction?.(params).subscribe({
-          next: (resp: any) => {
-            console.log("Customtable: Data received", resp);
-            const data = resp.results || resp;
-            const count = resp.count || data.length;
-            this.genericData.set(data);
-            this.isloading.set(false);
-            this.totalCount.set(count);
-          },
-          error: (err) => {
-            console.error("Customtable: Loader error", err);
-            this.isloading.set(false);
-          }
-        });
-    } else {
+    if (!this.loaderFunction) {
         this.isloading.set(false);
     }
   }

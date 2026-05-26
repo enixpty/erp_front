@@ -1,16 +1,31 @@
-<div class="p-4">
-  <p-card header="Historial de Movimientos de Inventario">
+<div class="p-6 bg-surface-100 min-h-screen">
+  <p-card styleClass="shadow-xl border-t-4 border-t-primary rounded-2xl mb-6">
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="bg-primary-100 p-3 rounded-xl">
+                <i class="pi pi-arrows-h text-primary-700 text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-primary-900 m-0">Movimientos de Inventario</h2>
+                <p class="text-surface-500 m-0 text-sm">Registro histórico de entradas, salidas y transferencias.</p>
+            </div>
+        </div>
+    </div>
+  </p-card>
+
+  <p-card styleClass="shadow-lg rounded-2xl border-none">
     <app-customtable
-      [genericCol]="cols"
-      [loaderFunction]="loadMovements"
-      [columnTemplates]="{ 'movement_type_name': typeTemplate, 'created': dateTemplate }">
+      [data]="movements()"
+      [columns]="cols"
+      [columnTemplates]="{ 'movement_type_name': typeTemplate, 'created': dateTemplate }"
+      titletable="Movimientos">
     </app-customtable>
   </p-card>
 </div>
 
 <ng-template #typeTemplate let-item>
-  <p-tag 
-    [value]="item.movement_type_name" 
+  <p-tag
+    [value]="item.movement_type_name"
     [severity]="getSeverity(item.movement_type_direction)">
   </p-tag>
 </ng-template>
@@ -18,3 +33,4 @@
 <ng-template #dateTemplate let-item>
   {{ item.created | date:'dd/MM/yyyy HH:mm' }}
 </ng-template>
+

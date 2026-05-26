@@ -22,7 +22,6 @@ import { LvalService } from '@src/app/services/lval.service';
             ButtonModule, FormsModule, MessageModule, Customtable, CustomModal],
   templateUrl: './list-roles.html',
   styleUrl: './list-roles.css',
-  providers: [MessageService],
 })
 export class ListRoles implements OnInit {
   @ViewChild('rolesTable') customTableComponent!: Customtable;

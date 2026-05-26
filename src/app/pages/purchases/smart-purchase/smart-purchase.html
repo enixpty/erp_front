@@ -1,15 +1,27 @@
-<div class="p-4">
-  <p-card header="Compras Inteligentes (Reabastecimiento)">
-    <div class="flex justify-end mb-4">
+<div class="p-6 bg-surface-100 min-h-screen">
+  <p-card styleClass="shadow-xl border-t-4 border-t-primary rounded-2xl mb-6">
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="bg-primary-100 p-3 rounded-xl">
+                <i class="pi pi-sparkles text-primary-700 text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-primary-900 m-0">Compras Inteligentes</h2>
+                <p class="text-surface-500 m-0 text-sm">Reabastecimiento automático basado en stock mínimo.</p>
+            </div>
+        </div>
         <p-button label="Generar Órdenes de Compra" icon="pi pi-check" severity="success" (click)="processPurchase()" [loading]="loading"></p-button>
     </div>
-    
+  </p-card>
+
+  <p-card styleClass="shadow-lg rounded-2xl border-none">
     <app-customtable
-      [genericCol]="cols"
-      [loaderFunction]="loadLowStock"
+      [data]="skus()"
+      [columns]="cols"
       [selectionMode]="'multiple'"
-      [(selection)]="selectedSkus">
+      [(selection)]="selectedSkus"
+      titletable="Productos con Stock Crítico">
     </app-customtable>
   </p-card>
 </div>
-<p-toast></p-toast>
+

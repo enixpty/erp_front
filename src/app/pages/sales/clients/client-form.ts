@@ -36,7 +36,6 @@ import { DividerModule } from 'primeng/divider';
   selector: 'app-client-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, Toast, RouterLink, DividerModule],
-  providers: [MessageService],
   templateUrl: './client-form.html'
 })
 export class ClientFormComponent implements OnInit {

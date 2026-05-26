@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -13,26 +13,34 @@ import { environment } from '@src/environments/environment';
   selector: 'app-smart-purchase',
   standalone: true,
   imports: [CommonModule, CardModule, ButtonModule, Customtable, FormsModule, ToastModule],
-  providers: [MessageService],
   templateUrl: './smart-purchase.html'
 })
-export class SmartPurchaseComponent {
+export class SmartPurchaseComponent implements OnInit {
   private http = inject(HttpClient);
   private msg = inject(MessageService);
   
+  skus = signal<any[]>([]);
   selectedSkus: any[] = [];
   loading = false;
 
   cols = [
-    { field: 'code', header: 'SKU' },
-    { field: 'name', header: 'Producto' },
-    { field: 'current_stock', header: 'Stock Actual' },
-    { field: 'min_stock', header: 'Stock Mínimo' },
-    { field: 'last_price', header: 'Últ. Precio' },
-    { field: 'last_date', header: 'Últ. Compra' }
+    { field: 'code', header: 'SKU', filter: true },
+    { field: 'name', header: 'Producto' , filter: true},
+    { field: 'current_stock', header: 'Stock Actual', filter: true },
+    { field: 'min_stock', header: 'Stock Mínimo' , filter: true},
+    { field: 'last_price', header: 'Últ. Precio' , filter: true},
+    { field: 'last_date', header: 'Últ. Compra', filter: true }
   ];
 
-  loadLowStock = (params: any) => this.http.get<any>(`${environment.apiUrl}/api/inventory/skus/low-stock/`, { params });
+  ngOnInit() {
+    this.loadLowStock();
+  }
+
+  loadLowStock() {
+    this.http.get<any>(`${environment.apiUrl}/api/inventory/skus/low-stock/`).subscribe(res => {
+        this.skus.set(res.results || res);
+    });
+  }
 
   processPurchase() {
     if (this.selectedSkus.length === 0) return;

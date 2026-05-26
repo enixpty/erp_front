@@ -15,7 +15,6 @@ import { AccountingService } from '@src/app/services/accounting.service';
   selector: 'app-fiscal-periods',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, DialogModule, InputNumberModule, ToastModule, ConfirmDialogModule, Customtable],
-  providers: [MessageService, ConfirmationService],
   templateUrl: './fiscal-periods.html'
 })
 export class FiscalPeriodsComponent implements OnInit {

@@ -18,7 +18,6 @@ import { CreditNoteService } from '@src/app/services/credit-note.service';
   selector: 'app-credit-note-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, DatePickerModule, Toast, RouterLink],
-  providers: [MessageService],
   templateUrl: './credit-note-form.html'
 })
 export class CreditNoteFormComponent implements OnInit {

@@ -16,7 +16,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       <div class="bg-surface-50 p-4 rounded-lg">
         <label class="text-xs font-bold text-surface-500 uppercase">Cliente</label>
-        <p class="font-bold text-lg m-0">{{invoice.client_name}}</p>
+        <p class="font-bold text-lg m-0">{{invoice.customer_name || invoice.client_name}}</p>
       </div>
       <div class="bg-surface-50 p-4 rounded-lg">
         <label class="text-xs font-bold text-surface-500 uppercase">Fecha</label>

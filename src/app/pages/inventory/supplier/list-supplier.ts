@@ -22,7 +22,6 @@ import { Supplier } from '@src/app/interfaces/supplier.interface';
     ReactiveFormsModule, ToggleButtonModule, TooltipModule, ToastModule, 
     ConfirmDialogModule, Customtable
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './list-supplier.html'
 })
 export class ListSupplierComponent implements OnInit {

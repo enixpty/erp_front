@@ -13,7 +13,6 @@ import { ToastModule } from 'primeng/toast';
   selector: 'app-payment-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, InputTextModule, DatePickerModule, ToastModule],
-  providers: [MessageService],
   templateUrl: './payment-form.html'
 })
 export class PaymentFormComponent {

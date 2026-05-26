@@ -30,7 +30,6 @@ import { Brand } from '@src/app/interfaces/brand.interface';
     ConfirmDialogModule,
     Customtable
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './list-brand.html'
 })
 export class ListBrandComponent implements OnInit {
@@ -44,11 +43,12 @@ export class ListBrandComponent implements OnInit {
   displayModal = signal<boolean>(false);
   submitting = signal<boolean>(false);
   isEdit = signal<boolean>(false);
+  brands = signal<Brand[]>([]);
 
   cols = [
     { field: 'name', header: 'Nombre', order: true, filter: true },
     { field: 'status', header: 'Estado', order: true, filter: true },
-    { field: 'action', header: '', order: false, filter: false }
+    { field: 'actions', header: 'Acciones', order: false, filter: false }
   ];
 
   form: FormGroup;
@@ -61,7 +61,15 @@ export class ListBrandComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.loadBrands();
+  }
+
+  loadBrands() {
+    this.brandService.getBrands({rows: 1000}).subscribe(resp => {
+        this.brands.set(resp.results || resp);
+    });
+  }
 
   openNew() {
     this.isEdit.set(false);

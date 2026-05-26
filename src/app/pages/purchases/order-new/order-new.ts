@@ -14,12 +14,12 @@ import { SkuService } from '@src/app/services/sku.service';
 import { GlobalConfigService } from '@src/app/services/global-config.service';
 import { SupplierService } from '@src/app/services/supplier.service';
 import { WarehouseService } from '@src/app/services/warehouse.service';
+import { first } from 'rxjs';
 
 @Component({
   selector: 'app-order-new',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, InputNumberModule, SelectModule, AutoCompleteModule, ToastModule, RouterLink],
-  providers: [MessageService],
   templateUrl: './order-new.html'
 })
 export class OrderNewComponent implements OnInit {
@@ -36,7 +36,7 @@ export class OrderNewComponent implements OnInit {
   suppliers = signal<any[]>([]);
   warehouses = signal<any[]>([]);
   taxRate = signal<number>(0);
-  
+
   form: FormGroup = this.fb.group({
     supplier: [null, Validators.required],
     warehouse: [null, Validators.required],
@@ -55,23 +55,38 @@ export class OrderNewComponent implements OnInit {
   }
 
   get taxAmount(): number {
-    const freight = this.form.get('freight_cost')?.value || 0;
-    const insurance = this.form.get('insurance_cost')?.value || 0;
-    return (this.subtotal + freight + insurance) * (this.form.get('tax_rate')?.value / 100);
+    const freight = parseFloat(this.form.get('freight_cost')?.value || 0);
+    const insurance = parseFloat(this.form.get('insurance_cost')?.value || 0);
+    const taxRate = parseFloat(this.form.get('tax_rate')?.value || 0);
+
+    const linesTotal = this.lines.controls.reduce((acc: number, control: any) => {
+        const qty = parseFloat(control.get('quantity')?.value || 0);
+        const price = parseFloat(control.get('unit_price')?.value || 0);
+        return acc + (qty * price);
+    }, 0);
+
+    const baseAmount = linesTotal + freight + insurance;
+    const tax = baseAmount * (taxRate / 100);
+    return parseFloat(tax.toFixed(6));
   }
 
   get total(): number {
-    const freight = this.form.get('freight_cost')?.value || 0;
-    const insurance = this.form.get('insurance_cost')?.value || 0; 
-    return this.subtotal + this.taxAmount + parseFloat(freight) + parseFloat(insurance);
+    const freight = parseFloat(this.form.get('freight_cost')?.value || 0);
+    const insurance = parseFloat(this.form.get('insurance_cost')?.value || 0);
+    const total = this.subtotal + this.taxAmount + freight + insurance;
+    return parseFloat(total.toFixed(6));
+  }
+
+  get taxRateDisplay(): string {
+    const rate = this.form.get('tax_rate')?.value || 0;
+    return (rate).toFixed(4) + ' %';
   }
 
   ngOnInit() {
     this.configService.getConfig().subscribe((c: any) => {
         if (c && c.count > 0) {
-          debugger
             const rate = parseFloat(c.results[0].tax_rate);
-            this.taxRate.set((rate*100));
+            this.taxRate.set(rate);
             this.form.get('tax_rate')?.setValue(this.taxRate());
         }
     });
@@ -100,8 +115,12 @@ export class OrderNewComponent implements OnInit {
   }
 
   save() {
-    if (this.form.invalid) return;
-    
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.msg.add({ severity: 'error', summary: 'Error', detail: 'Por favor complete todos los campos requeridos.' });
+      return;
+    }
+
     const payload = {
         supplier: this.form.value.supplier,
         warehouse: this.form.value.warehouse,
@@ -115,9 +134,16 @@ export class OrderNewComponent implements OnInit {
         }))
     };
 
-    this.poService.createPurchaseOrder(payload).subscribe(() => {
-        this.msg.add({severity: 'success', summary: 'Creado', detail: 'Orden creada exitosamente'});
-        setTimeout(() => this.router.navigate(['/purchases/orders']), 1000);
+    this.poService.createPurchaseOrder(payload).pipe(first()).subscribe({
+        next: () => {
+            setTimeout(() => this.router.navigate(['/purchases/orders']), 1000);
+        },
+        error: (err) => {
+            console.error('Error capturado:', err);
+            if (err.status !== 201 && err.status !== 200) {
+                this.msg.add({severity: 'error', summary: 'Error', detail: err.error?.error || 'No se pudo crear la orden'});
+            }
+        }
     });
   }
 }

@@ -12,8 +12,7 @@ import { environment } from '@src/environments/environment';
   selector: 'app-list-authorizations',
   standalone: true,
   imports: [CommonModule, CardModule, ButtonModule, ToastModule, Customtable],
-  templateUrl: './list-authorizations.html',
-  providers: [MessageService]
+  templateUrl: './list-authorizations.html'
 })
 export class ListAuthorizationsComponent implements OnInit {
   private http = inject(HttpClient);
@@ -33,16 +32,31 @@ export class ListAuthorizationsComponent implements OnInit {
 
   loadAuthorizations = (params: any) => this.http.get<any>(this.url, { params });
 
-  approve(id: number) {
-    this.http.post(`${this.url}${id}/approve/`, {}).subscribe({
+  approve(row: any) {
+    const printWindow = row.document_type === 'INVOICE' ? window.open('', '_blank') : null;
+
+    this.http.post(`${this.url}${row.id}/approve/`, {}).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Aprobado', detail: 'Documento autorizado' });
-        // Refrescar tabla (lógica simplificada)
-        window.location.reload(); 
+        
+        if (row.document_type === 'INVOICE' && printWindow) {
+            this.http.get(`${environment.apiUrl}/api/sales/sales-invoices/${row.document_id}/print/`, { responseType: 'blob' })
+                .subscribe((blob: Blob) => {
+                    const url = window.URL.createObjectURL(blob);
+                    printWindow.location.href = url;
+                    window.location.reload(); 
+                });
+        } else {
+            window.location.reload(); 
+        }
       },
-      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo aprobar' })
+      error: () => {
+        if (printWindow) printWindow.close();
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo aprobar' });
+      }
     });
   }
+
 
   reject(id: number) {
     this.http.post(`${this.url}${id}/reject/`, { comment: 'Rechazo administrativo' }).subscribe({

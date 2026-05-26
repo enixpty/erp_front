@@ -17,6 +17,7 @@
             (selectionChange)="onSelectionChange($event)"
             [selectionMode]="selectionMode"
             [loading]="loaderFunction ? isloading() : loading"
+            appendTo="body"
         >
         <ng-template pTemplate="paginatorright">
             <div class="flex justify-content-end">

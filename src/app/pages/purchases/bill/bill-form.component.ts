@@ -17,7 +17,6 @@ import { VendorInvoiceService } from '@src/app/services/vendor-invoice.service';
   selector: 'app-bill-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, InputTextModule, DatePickerModule, InputNumberModule, ToastModule, RouterLink],
-  providers: [MessageService],
   templateUrl: './bill-form.html'
 })
 export class BillFormComponent implements OnInit {
@@ -51,22 +50,35 @@ export class BillFormComponent implements OnInit {
         this.form.patchValue({
           order: r.order,
           receipt: r.id,
-          supplier: r.order_supplier_id, // Asegurar que este campo exista en la respuesta
+          supplier: r.order_supplier_id,
           total_amount: r.total,
-          tax_amount: r.total * 0.07 // Ajustar según lógica real si es necesario
+          tax_amount: r.total * 0.07 
         });
+        console.log('Form valid:', this.form.valid, 'Errors:', this.form.errors, 'Controls:', this.form.value);
       });
     }
   }
 
   save() {
     if (this.form.valid) {
-      this.invoiceService.createInvoice(this.form.value).subscribe({
+      const payload = {
+        ...this.form.value,
+        invoice_date: this.form.value.invoice_date instanceof Date 
+            ? this.form.value.invoice_date.toISOString().split('T')[0] 
+            : this.form.value.invoice_date,
+        total_amount: parseFloat(this.form.value.total_amount.toFixed(2)),
+        tax_amount: parseFloat(this.form.value.tax_amount.toFixed(2))
+      };
+      
+      this.invoiceService.createInvoice(payload).subscribe({
         next: () => {
           this.msg.add({ severity: 'success', summary: 'Factura registrada' });
           this.router.navigate(['/purchases/list-bill']);
         },
-        error: () => this.msg.add({ severity: 'error', summary: 'Error al registrar' })
+        error: (err) => {
+            console.error(err);
+            this.msg.add({ severity: 'error', summary: 'Error al registrar', detail: err.error?.detail || 'Revisa los datos' })
+        }
       });
     }
   }

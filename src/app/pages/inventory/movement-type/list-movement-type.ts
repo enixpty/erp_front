@@ -22,7 +22,6 @@ import { MovementType } from '@src/app/interfaces/movement-type.interface';
     CommonModule, CardModule, ButtonModule, InputTextModule, DialogModule, 
     ReactiveFormsModule, ToggleButtonModule, SelectModule, ToastModule, ConfirmDialogModule, Customtable, CheckboxModule
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './list-movement-type.html'
 })
 export class ListMovementTypeComponent {
@@ -36,8 +35,8 @@ export class ListMovementTypeComponent {
   isEdit = signal(false);
   directions = ['IN', 'OUT', 'TRANSFER'];
   cols = [
-    { field: 'name', header: 'Nombre' },
-    { field: 'direction', header: 'Dirección' },
+    { field: 'name', header: 'Nombre', filter: true },
+    { field: 'direction', header: 'Dirección', filter: true },
     { field: 'action', header: '' }
   ];
   form = this.fb.group({

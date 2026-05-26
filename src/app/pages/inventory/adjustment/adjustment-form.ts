@@ -18,7 +18,6 @@ import { environment } from '@src/environments/environment';
   selector: 'app-adjustment-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, SelectModule, InputTextModule, TextareaModule, ToastModule, RouterLink],
-  providers: [MessageService],
   templateUrl: './adjustment-form.html'
 })
 export class AdjustmentFormComponent implements OnInit {

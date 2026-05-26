@@ -17,7 +17,6 @@ import { GlobalConfigService } from '@src/app/services/global-config.service';
   selector: 'app-order-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, InputNumberModule, SelectModule, AutoCompleteModule, ToastModule, RouterLink],
-  providers: [MessageService],
   templateUrl: './order-form.html'
 })
 export class OrderFormComponent implements OnInit {

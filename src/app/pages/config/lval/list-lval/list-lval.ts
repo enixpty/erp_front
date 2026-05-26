@@ -32,7 +32,6 @@ import { Lval } from '@src/app/interfaces/lval.interface';
     ConfirmDialogModule,
     Customtable
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './list-lval.html'
 })
 export class ListLvalComponent implements OnInit {

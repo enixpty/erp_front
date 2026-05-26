@@ -12,8 +12,7 @@ import { ToastModule } from 'primeng/toast';
   selector: 'app-list-client',
   standalone: true,
   imports: [CommonModule, Customtable, ButtonModule, CardModule, RouterLink, ToastModule],
-  templateUrl: './list-client.html',
-  providers: [MessageService]
+  templateUrl: './list-client.html'
 })
 export class ListClientComponent {
   @ViewChild(Customtable) customTable!: Customtable;

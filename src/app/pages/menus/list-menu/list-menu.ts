@@ -33,8 +33,7 @@ interface Menu {
   imports: [CardModule, InputTextModule, Select, Toast, 
             ButtonModule, FormsModule, MessageModule, Customtable, CustomModal],
   templateUrl: './list-menu.html',
-  styleUrl: './list-menu.css',
-  providers: [MessageService],
+  styleUrl: './list-menu.css'
 })
 export class ListMenu implements OnInit {
   @ViewChild('menusTable') customTableComponent!: Customtable;

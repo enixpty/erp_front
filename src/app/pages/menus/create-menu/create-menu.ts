@@ -25,8 +25,7 @@ interface Menu {
   imports: [CardModule, NgClass, InputTextModule, Select, Toast, 
             ButtonModule, FormsModule, MessageModule],
   templateUrl: './create-menu.html',
-  styleUrl: './create-menu.css',
-  providers: [MessageService],
+  styleUrl: './create-menu.css'
 })
 export class CreateMenu implements OnInit {
   private messageService = inject(MessageService);

@@ -1,27 +1,39 @@
-<div class="p-4">
-  <p-card>
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">Facturas de Proveedor</h2>
-      <!-- El botón de Nueva Factura se quitó de aquí porque requiere una Recepción previa -->
+<div class="p-6 bg-surface-100 min-h-screen">
+  <!-- Header Card -->
+  <p-card styleClass="shadow-xl border-t-4 border-t-primary rounded-2xl mb-6">
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="bg-primary-100 p-3 rounded-xl">
+                <i class="pi pi-receipt text-primary-700 text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-primary-900 m-0">Facturas de Proveedor</h2>
+                <p class="text-surface-500 m-0 text-sm">Listado histórico de facturas recibidas de proveedores.</p>
+            </div>
+        </div>
     </div>
+  </p-card>
+
+  <!-- Content Card -->
+  <p-card styleClass="shadow-lg rounded-2xl border-none">
     <app-customtable
-      [genericCol]="cols"
-      [loaderFunction]="loadInvoices"
-      [actionsTemplate]="actions"
+      [data]="invoices()"
+      [columns]="cols"
+      [columnTemplates]="{ 'actions': actions }"
       titletable="Facturas">
-<ng-template #actions let-item>
-    <div class="flex gap-1 justify-center" style="width: 140px;">
-        <p-button icon="pi pi-file-pdf" severity="secondary" text size="small" pTooltip="Ver PDF" (onClick)="printPDF(item.id)"></p-button>
-        <p-button icon="pi pi-envelope" severity="success" text size="small" pTooltip="Enviar por Correo" (onClick)="sendEmail(item.id)"></p-button>
-        @if (item.status === 'PENDING') {
-            <p-button icon="pi pi-send" severity="secondary" size="small" pTooltip="Enviar a Validar" (onClick)="changeStatus(item, 'PENDING_VALIDATION')"></p-button>
-        }
-        @if (item.status === 'PENDING_VALIDATION') {
-            <p-button icon="pi pi-check" severity="success" size="small" pTooltip="Validar" (onClick)="changeStatus(item, 'VALIDATED')"></p-button>
-        }
-    </div>
-</ng-template>
+      <ng-template #actions let-item>
+        <div class="flex gap-1 justify-center">
+            <p-button icon="pi pi-file-pdf" [text]="true" severity="secondary" size="small" pTooltip="Ver PDF" (onClick)="printPDF(item.id)"></p-button>
+            <p-button icon="pi pi-envelope" [text]="true" severity="success" size="small" pTooltip="Enviar por Correo" (onClick)="sendEmail(item.id)"></p-button>
+            @if (item.status === 'PENDING') {
+                <p-button icon="pi pi-send" [text]="true" severity="secondary" size="small" pTooltip="Enviar a Validar" (onClick)="changeStatus(item, 'PENDING_VALIDATION')"></p-button>
+            }
+            @if (item.status === 'PENDING_VALIDATION') {
+                <p-button icon="pi pi-check" [text]="true" severity="success" size="small" pTooltip="Validar" (onClick)="changeStatus(item, 'VALIDATED')"></p-button>
+            }
+        </div>
+      </ng-template>
     </app-customtable>
   </p-card>
 </div>
-<p-toast></p-toast>
+

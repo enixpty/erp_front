@@ -15,7 +15,13 @@ export class NotificationService {
 
   connect(): void {
     const userId = this.authService.user_id();
-    console.log('SSE: Intentando conectar para el usuario ID:', userId);
+    
+    // Si ya hay una conexión activa para este usuario, no hacemos nada
+    if (this.eventSource && this.eventSource.readyState !== EventSource.CLOSED) {
+        console.log('SSE: Ya existe una conexión activa');
+        return;
+    }
+
     if (!userId) {
       console.warn('SSE: No se puede conectar, user_id es null');
       return;

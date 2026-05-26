@@ -16,7 +16,6 @@ import { environment } from '@src/environments/environment';
   selector: 'app-document-type-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, InputTextModule, CheckboxModule, SelectModule, Toast, RouterLink],
-  providers: [MessageService],
   templateUrl: './document-type-form.html'
 })
 export class DocumentTypeFormComponent implements OnInit {

@@ -60,15 +60,15 @@ export const purchasesRoutes: Routes = [
         component: ListBillComponent
     },
     {
-        path: 'return',
-        component: ListReturnComponent
+        path: 'return/new',
+        component: ReturnFormComponent
     },
     {
         path: 'return/:id',
         component: ReturnFormComponent
     },
     {
-        path: 'return/new',
-        component: ReturnFormComponent
-    }
+        path: 'return',
+        component: ListReturnComponent
+    },
 ];

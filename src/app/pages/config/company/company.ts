@@ -25,7 +25,6 @@ import { environment } from '@src/environments/environment';
     FileUploadModule,
     DividerModule
   ],
-  providers: [MessageService],
   templateUrl: './company.html'
 })
 export class CompanyComponent implements OnInit {

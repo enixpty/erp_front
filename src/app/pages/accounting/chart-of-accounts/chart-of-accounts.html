@@ -10,9 +10,16 @@
 
     <app-customtable
       #table
-      [genericCol]="cols"
-      [loaderFunction]="accountingService.getAccounts.bind(accountingService)"
+      [data]="accounts()"
+      [columns]="cols"
+      [columnTemplates]="{ 'actions': actions }"
       titletable="Cuentas Contables">
+      <ng-template #actions let-row>
+        <div class="flex gap-2">
+            <p-button icon="pi pi-pencil" [text]="true" (click)="editAccount(row)" severity="primary"></p-button>
+            <p-button icon="pi pi-trash" [text]="true" (click)="deleteAccount(row.id)" severity="danger"></p-button>
+        </div>
+      </ng-template>
     </app-customtable>
   </p-card>
 </div>
@@ -54,4 +61,4 @@
     </div>
   </form>
 </p-dialog>
-<p-toast></p-toast>
+

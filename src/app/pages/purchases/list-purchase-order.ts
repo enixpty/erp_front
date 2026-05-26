@@ -30,7 +30,6 @@ import { Warehouse } from '@src/app/interfaces/warehouse.interface';
     CommonModule, RouterLink, CardModule, ButtonModule, InputTextModule, DialogModule, 
     ReactiveFormsModule, SelectModule, InputNumberModule, ToastModule, Customtable, FieldsetModule, AutoCompleteModule, TooltipModule
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './list-purchase-order.html'
 })
 export class ListPurchaseOrderComponent implements OnInit {
@@ -52,12 +51,12 @@ export class ListPurchaseOrderComponent implements OnInit {
   filteredSkus = signal<SKU[]>([]);
   
   cols = [
-    { field: 'id', header: 'ID' },
-    { field: 'created', header: 'Fecha' },
-    { field: 'supplier', header: 'Proveedor' },
-    { field: 'total', header: 'Total' },
-    { field: 'status', header: 'Estado' },
-    { field: 'action', header: 'Acciones' }
+    { field: 'id', header: 'ID' , filter: true},
+    { field: 'created', header: 'Fecha' , filter: true},
+    { field: 'supplier', header: 'Proveedor', filter: true },
+    { field: 'total', header: 'Total', filter: true },
+    { field: 'status', header: 'Estado', filter: true },
+    { field: 'action', header: 'Acciones' , filter: true}
   ];
 
   columnTemplates: any = {};
@@ -114,21 +113,18 @@ export class ListPurchaseOrderComponent implements OnInit {
 
     this.poService.createPurchaseOrder(formData).subscribe(() => {
         this.displayModal.set(false);
-        this.msg.add({ severity: 'success', summary: 'Creado' });
         this.table.onRefresh();
     });
   }
 
   confirmOrder(id: any) {
     this.poService.confirmOrder(id).subscribe(() => {
-        this.msg.add({ severity: 'success', summary: 'Confirmado', detail: 'Orden de compra confirmada' });
         this.table.onRefresh();
     });
   }
 
   cancelOrder(id: any) {
     this.poService.cancelOrder(id).subscribe(() => {
-        this.msg.add({ severity: 'warn', summary: 'Cancelado', detail: 'Orden de compra anulada' });
         this.table.onRefresh();
     });
   }

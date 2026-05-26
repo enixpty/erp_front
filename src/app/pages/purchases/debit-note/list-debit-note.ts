@@ -6,10 +6,13 @@ import { Customtable } from '@src/app/components/customTable/customtable';
 import { DebitNoteService } from '@src/app/services/debit-note.service';
 import { RouterLink } from '@angular/router';
 
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+
 @Component({
   selector: 'app-list-debit-note',
   standalone: true,
-  imports: [CommonModule, Customtable, CardModule, ButtonModule, RouterLink],
+  imports: [CommonModule, Customtable, CardModule, ButtonModule, RouterLink, ToastModule],
   templateUrl: './list-debit-note.html'
 })
 export class ListDebitNoteComponent {

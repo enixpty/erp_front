@@ -12,8 +12,7 @@ import { Toast } from 'primeng/toast';
   selector: 'app-list-quotation',
   standalone: true,
   imports: [CommonModule, Customtable, ButtonModule, CardModule, RouterLink, Toast],
-  templateUrl: './list-quotation.html',
-  providers: [MessageService]
+  templateUrl: './list-quotation.html'
 })
 export class ListQuotationComponent {
   @ViewChild(Customtable) customTable!: Customtable;
@@ -21,12 +20,12 @@ export class ListQuotationComponent {
   private messageService = inject(MessageService);
 
   cols = [
-    { field: 'document_number', header: 'N° Cotización' },
-    { field: 'client_name', header: 'Cliente' },
+    { field: 'document_number', header: 'N° Cotización' , filter: true},
+    { field: 'client_name', header: 'Cliente', filter: true },
     { field: 'date', header: 'Fecha' },
-    { field: 'expiration_date', header: 'Vence' },
-    { field: 'total', header: 'Total' },
-    { field: 'status_display', header: 'Estado' },
+    { field: 'expiration_date', header: 'Vence', filter: true },
+    { field: 'total', header: 'Total' , filter: true},
+    { field: 'status_display', header: 'Estado' , filter: true},
     { field: 'action', header: 'Acciones' }
   ];
 

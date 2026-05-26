@@ -8,10 +8,13 @@ import { Customtable } from '@src/app/components/customTable/customtable';
 import { GoodsReceiptListService } from '@src/app/services/goods-receipt-list.service';
 import { GoodsReceiptService } from '@src/app/services/goods-receipt.service';
 
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+
 @Component({
   selector: 'app-list-receipts',
   standalone: true,
-  imports: [CommonModule, CardModule, Customtable, RouterLink, ButtonModule, TooltipModule],
+  imports: [CommonModule, CardModule, Customtable, RouterLink, ButtonModule, TooltipModule, ToastModule],
   templateUrl: './list-receipts.html'
 })
 export class ListReceiptsComponent implements OnInit {
@@ -21,12 +24,12 @@ export class ListReceiptsComponent implements OnInit {
   private router = inject(Router);
   
   cols = [
-    { field: 'id', header: 'ID' },
-    { field: 'supplier_name', header: 'Proveedor' },
-    { field: 'order', header: 'OC ID' },
-    { field: 'received_date', header: 'Fecha Recepción' },
-    { field: 'total', header: 'Total' },
-    { field: 'action', header: 'Acciones' }
+    { field: 'id', header: 'ID', filter: true },
+    { field: 'supplier_name', header: 'Proveedor', filter: true },
+    { field: 'order', header: 'OC ID', filter: true },
+    { field: 'received_date', header: 'Fecha Recepción', filter: true },
+    { field: 'total', header: 'Total', filter: true },
+    { field: 'actions', header: 'Acciones' }
   ];
 
   ngOnInit() {

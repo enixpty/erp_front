@@ -12,7 +12,6 @@ import { PaymentFormComponent } from './payment-form.component';
   selector: 'app-list-payables',
   standalone: true,
   imports: [CommonModule, Customtable, ButtonModule, CardModule, PaymentFormComponent, ToastModule],
-  providers: [MessageService],
   templateUrl: './list-payables.html'
 })
 export class ListPayablesComponent {
@@ -21,13 +20,13 @@ export class ListPayablesComponent {
   @ViewChild(PaymentFormComponent) paymentForm!: PaymentFormComponent;
 
   cols = [
-    { field: 'id', header: 'ID' },
-    { field: 'invoice', header: 'ID Factura' },
-    { field: 'total_amount', header: 'Total' },
-    { field: 'amount_paid', header: 'Pagado' },
-    { field: 'due_date', header: 'Fecha Vencimiento' },
-    { field: 'aging', header: 'Antigüedad' },
-    { field: 'status', header: 'Estado' },
+    { field: 'id', header: 'ID' , filter: true},
+    { field: 'invoice', header: 'ID Factura', filter: true },
+    { field: 'total_amount', header: 'Total' , filter: true},
+    { field: 'amount_paid', header: 'Pagado', filter: true },
+    { field: 'due_date', header: 'Fecha Vencimiento', filter: true },
+    { field: 'aging', header: 'Antigüedad' , filter: true},
+    { field: 'status', header: 'Estado' , filter: true},
     { field: 'action', header: 'Acciones' }
   ];
 

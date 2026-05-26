@@ -1,5 +1,19 @@
-<div class="p-4">
-  <p-card header="Devoluciones a Proveedor">
+<div class="p-6 bg-surface-100 min-h-screen">
+  <p-card styleClass="shadow-xl border-t-4 border-t-primary rounded-2xl mb-6">
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="bg-primary-100 p-3 rounded-xl">
+                <i class="pi pi-undo text-primary-700 text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-primary-900 m-0">Devoluciones a Proveedor</h2>
+                <p class="text-surface-500 m-0 text-sm">Registro de mercancía devuelta a proveedores.</p>
+            </div>
+        </div>
+    </div>
+  </p-card>
+
+  <p-card styleClass="shadow-lg rounded-2xl border-none">
     <app-customtable
       [genericCol]="cols"
       [loaderFunction]="loadReturns"
@@ -14,8 +28,10 @@
 </ng-template>
 
 <ng-template #actionTemplate let-item>
-    <div class="flex gap-2">
-        <p-button icon="pi pi-eye" pTooltip="Ver Detalle" severity="info" text [routerLink]="['/purchases/return', item.id]"></p-button>
-        <p-button icon="pi pi-print" pTooltip="Imprimir Devolución" severity="help" text (click)="printReturn(item.id)"></p-button>
+    <div class="flex gap-1 justify-center">
+        <p-button icon="pi pi-eye" [text]="true" severity="info" pTooltip="Ver Detalle" [routerLink]="['/purchases/return', item.id]"></p-button>
+        <p-button icon="pi pi-print" [text]="true" severity="secondary" pTooltip="Imprimir Devolución" (click)="printReturn(item.id)"></p-button>
     </div>
 </ng-template>
+
+

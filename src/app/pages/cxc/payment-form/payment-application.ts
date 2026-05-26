@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { AccountReceivableService } from '@src/app/services/account-receivable.service';
 import { ClientService } from '@src/app/services/client.service';
+import { AccountingService } from '@src/app/services/accounting.service';
 import { MessageService } from 'primeng/api';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -17,19 +18,20 @@ import { ToastModule } from 'primeng/toast';
   selector: 'app-payment-application',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, CardModule, ButtonModule, InputTextModule, InputNumberModule, DatePickerModule, Select, TableModule, ToastModule],
-  providers: [MessageService],
   templateUrl: './payment-application.html'
 })
 export class PaymentApplicationComponent implements OnInit {
   private fb = inject(FormBuilder);
   private arService = inject(AccountReceivableService);
   private clientService = inject(ClientService);
+  private accountingService = inject(AccountingService);
   private msg = inject(MessageService);
   private cd = inject(ChangeDetectorRef);
 
   clients: any[] = [];
   invoices: any[] = [];
-  
+  mappingValid = signal<boolean>(true);
+
   form: FormGroup = this.fb.group({
     client_id: [null, Validators.required],
     amount: [0, [Validators.required, Validators.min(0.01)]],
@@ -43,7 +45,21 @@ export class PaymentApplicationComponent implements OnInit {
         this.clients = allClients.filter((c: any) => c.payment_term === 'CREDIT');
         this.cd.detectChanges();
     });
+
+    // Validar contabilidad al entrar
+    this.accountingService.validateSetup('PAYMENT_IN').subscribe(res => {
+      this.mappingValid.set(res.is_valid);
+      if (!res.is_valid) {
+        this.msg.add({
+          severity: 'error',
+          summary: 'Configuración Incompleta',
+          detail: 'Falta configuración contable para cobros a clientes.',
+          sticky: true
+        });
+      }
+    });
   }
+
 
   onClientSelect() {
     const clientId = this.form.get('client_id')?.value;
@@ -110,7 +126,7 @@ export class PaymentApplicationComponent implements OnInit {
     const payload = {
       payment_data: {
         amount: totalPayment,
-        payment_date: this.form.get('payment_date')?.value,
+        payment_date: this.form.get('payment_date')?.value instanceof Date ? this.form.get('payment_date')?.value.toISOString().split('T')[0] : this.form.get('payment_date')?.value,
         reference: this.form.get('reference')?.value
       },
       applications

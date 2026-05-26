@@ -23,7 +23,6 @@ import { SelectModule } from 'primeng/select';
     ReactiveFormsModule, ToggleButtonModule, TooltipModule, ToastModule, 
     ConfirmDialogModule, Customtable, SelectModule
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './list-category.html'
 })
 export class ListCategoryComponent implements OnInit {

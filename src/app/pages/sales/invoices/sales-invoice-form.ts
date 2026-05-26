@@ -11,10 +11,12 @@ import { DividerModule } from 'primeng/divider';
 import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
+import { environment } from '@src/environments/environment';
 import { SalesInvoiceService } from '@src/app/services/sales-invoice.service';
 import { ClientService } from '@src/app/services/client.service';
 import { SkuService } from '@src/app/services/sku.service';
 import { WarehouseService } from '@src/app/services/warehouse.service';
+import { AccountingService } from '@src/app/services/accounting.service';
 
 @Component({
   selector: 'app-sales-invoice-form',
@@ -29,9 +31,13 @@ export class SalesInvoiceFormComponent implements OnInit {
   private clientService = inject(ClientService);
   private skuService = inject(SkuService);
   private warehouseService = inject(WarehouseService);
+  private accountingService = inject(AccountingService);
   private msg = inject(MessageService);
   private router = inject(Router);
   private cd = inject(ChangeDetectorRef);
+
+  mappingValid = signal<boolean>(true);
+  missingMappings = signal<string[]>([]);
 
   form: FormGroup = this.fb.group({
     client: [null, Validators.required],
@@ -51,14 +57,15 @@ export class SalesInvoiceFormComponent implements OnInit {
 
   // Getter para tipos de documento filtrados
   get filteredDocumentTypes() {
-    const client = this.clients.find(c => c.id === this.form.get('client')?.value);
+    const clientId = this.form.get('client')?.value;
+    const client = this.clients.find(c => c.id === clientId);
     if (!client) return [];
     
-    // Filtrar documentos que NO sean nota de crédito y que coincidan con el término de pago del cliente
+    // Filtrar documentos: deben coincidir con el término de pago (CASH/CREDIT)
+    // El campo payment_term viene del cliente y del documento
     return this.documentTypes.filter(dt => 
         dt.payment_term === client.payment_term && 
-        !dt.name.toLowerCase().includes('crédito') && 
-        !dt.name.toLowerCase().includes('nota')
+        dt.category === 'INVOICE'
     );
   }
 
@@ -81,12 +88,39 @@ export class SalesInvoiceFormComponent implements OnInit {
   ngOnInit() {
     this.form.patchValue({ due_date: new Date() });
     this.loadInitialData();
+
+    // Validar contabilidad al cambiar tipo de documento
+    this.form.get('document_type')?.valueChanges.subscribe(val => {
+      if (val) {
+        this.accountingService.validateSetup('SALES', val).subscribe(res => {
+          this.mappingValid.set(res.is_valid);
+          this.missingMappings.set(res.missing_events);
+          if (!res.is_valid) {
+            this.msg.add({
+              severity: 'error',
+              summary: 'Configuración Contable Incompleta',
+              detail: 'No se puede facturar con este tipo de documento hasta completar el mapeo contable.',
+              sticky: true
+            });
+          }
+        });
+      }
+    });
   }
 
   async loadInitialData() {
-    this.clientService.getClients({}).subscribe(data => this.clients = data.results || data);
-    this.warehouseService.getWarehouses({}).subscribe(data => this.warehouses = data.results || data);
-    this.invoiceService.getDocumentTypes().subscribe(data => this.documentTypes = data.results || data);
+    this.clientService.getClients({}).subscribe(data => {
+        this.clients = data.results || data;
+        this.cd.detectChanges();
+    });
+    this.warehouseService.getWarehouses({}).subscribe(data => {
+        this.warehouses = data.results || data;
+        this.cd.detectChanges();
+    });
+    this.invoiceService.getDocumentTypes().subscribe(data => {
+        this.documentTypes = data.results || data;
+        this.cd.detectChanges();
+    });
     
     this.skuService.getSkus({}).subscribe(data => {
         this.skus = (data.results || data).map((s: any) => ({ ...s, searchLabel: `${s.code} - ${s.name}` }));
@@ -94,7 +128,6 @@ export class SalesInvoiceFormComponent implements OnInit {
             this.addDetail();
         }
         this.isLoaded = true;
-        // Obliga a angular a detectar cambios después de actualizar la bandera de carga
         this.cd.detectChanges();
     });
   }
@@ -183,18 +216,21 @@ export class SalesInvoiceFormComponent implements OnInit {
         return;
     }
 
-    this.invoiceService.createInvoice(this.form.value).subscribe({
+    const formData = { ...this.form.value };
+    if (formData.due_date instanceof Date) {
+        formData.due_date = formData.due_date.toISOString().split('T')[0];
+    }
+    
+    this.invoiceService.createInvoice(formData).subscribe({
       next: (res) => {
-        if (res.status === 'PENDING_AUTHORIZATION') {
-           this.msg.add({ 
-             severity: 'warn', 
-             summary: 'Pendiente de Autorización', 
-             detail: `Factura ${res.document_number} creada, pero requiere autorización de un supervisor.` 
-           });
-        } else {
-           this.msg.add({ severity: 'success', summary: 'Éxito', detail: `Factura ${res.document_number} generada` });
-           window.open(`/api/sales/sales-invoices/${res.id}/print/`, '_blank');
-        }
+        this.msg.add({ severity: 'success', summary: 'Éxito', detail: `Factura ${res.document_number} generada` });
+        
+        // Abrir PDF siempre
+        this.invoiceService.printInvoice(res.id).subscribe((blob: Blob) => {
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        });
+
         setTimeout(() => this.router.navigate(['/sales/invoices']), 1500);
       },
       error: (err) => {

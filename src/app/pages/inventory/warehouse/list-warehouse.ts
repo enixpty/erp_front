@@ -22,7 +22,6 @@ import { Warehouse } from '@src/app/interfaces/warehouse.interface';
     ReactiveFormsModule, ToggleButtonModule, TooltipModule, ToastModule, 
     ConfirmDialogModule, Customtable
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './list-warehouse.html'
 })
 export class ListWarehouseComponent implements OnInit {

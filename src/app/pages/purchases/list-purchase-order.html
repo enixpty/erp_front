@@ -1,38 +1,49 @@
-<div class="p-4">
-  <p-card>
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">Órdenes de Compra</h2>
-      <p-button label="Nueva OC" icon="pi pi-plus" [routerLink]="['/purchases/order-new']"></p-button>
+<div class="p-6 bg-surface-100 min-h-screen">
+  <p-card styleClass="shadow-xl border-t-4 border-t-primary rounded-2xl mb-6">
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="bg-primary-100 p-3 rounded-xl">
+                <i class="pi pi-shopping-cart text-primary-700 text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-primary-900 m-0">Órdenes de Compra</h2>
+                <p class="text-surface-500 m-0 text-sm">Gestión de pedidos a proveedores.</p>
+            </div>
+        </div>
+        <p-button label="Nueva Orden" icon="pi pi-plus" [routerLink]="['/purchases/order-new']" severity="primary"></p-button>
     </div>
-    <app-customtable 
-      [genericCol]="cols" 
-      #poTable 
-      [loaderFunction]="poService.getPurchaseOrders.bind(poService)" 
-      [actionsTemplate]="actionTemplate"
-      [columnTemplates]="{ 'id': idTemplate }">
-    </app-customtable>
-    </p-card>
-    </div>
+  </p-card>
 
-    <ng-template #idTemplate let-po>
-    <a [routerLink]="['/purchases/order', po.id]" class="text-blue-500 hover:underline  "> {{ po.id }}</a>
-    </ng-template>
-    <ng-template #actionTemplate let-po>
-    <div class="flex gap-1">
-      <p-button icon="pi pi-file-pdf" pTooltip="Imprimir OC" text (onClick)="downloadPdf(po.id)"></p-button>
+  <p-card styleClass="shadow-lg rounded-2xl border-none">
+    <app-customtable 
+      #poTable 
+      [genericCol]="cols" 
+      [loaderFunction]="poService.getPurchaseOrders.bind(poService)" 
+      [columnTemplates]="{ 'id': idTemplate, 'action': actionTemplate }"
+      titletable="Órdenes">
+    </app-customtable>
+  </p-card>
+</div>
+
+<ng-template #idTemplate let-po>
+    <a [routerLink]="['/purchases/order', po.id]" class="text-blue-500 hover:underline"> {{ po.id }}</a>
+</ng-template>
+
+<ng-template #actionTemplate let-po>
+    <div class="flex gap-1 justify-center">
+      <p-button icon="pi pi-file-pdf" [text]="true" pTooltip="Imprimir OC" (onClick)="downloadPdf(po.id)"></p-button>
       @if (po.status === 'CONFIRMED') {
-          <p-button icon="pi pi-envelope" pTooltip="Enviar a Proveedor" text severity="success" (onClick)="sendEmail(po.id)"></p-button>
+          <p-button icon="pi pi-envelope" [text]="true" severity="success" pTooltip="Enviar a Proveedor" (onClick)="sendEmail(po.id)"></p-button>
       }
       @if (po.status === 'DRAFT') {
-          <p-button icon="pi pi-check" pTooltip="Confirmar Orden" text severity="success" (onClick)="confirmOrder(po.id)"></p-button>
+          <p-button icon="pi pi-check" [text]="true" severity="success" pTooltip="Confirmar Orden" (onClick)="confirmOrder(po.id)"></p-button>
       }
       @if (po.status === 'CONFIRMED') {
-          <p-button icon="pi pi-truck" pTooltip="Recibir Mercancía" text [routerLink]="['/purchases/receipt', po.id]"></p-button>
+          <p-button icon="pi pi-truck" [text]="true" pTooltip="Recibir Mercancía" [routerLink]="['/purchases/receipt', po.id]"></p-button>
       }
       @if (po.status !== 'RECEIVED' && po.status !== 'CANCELLED') {
-          <p-button icon="pi pi-times" pTooltip="Anular Orden" text severity="danger" (onClick)="cancelOrder(po.id)"></p-button>
+          <p-button icon="pi pi-times" [text]="true" severity="danger" pTooltip="Anular Orden" (onClick)="cancelOrder(po.id)"></p-button>
       }
     </div>
-    </ng-template>
+</ng-template>
 
-<p-toast />

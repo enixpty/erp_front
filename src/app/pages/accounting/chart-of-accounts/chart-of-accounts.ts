@@ -15,7 +15,6 @@ import { AccountingService } from '@src/app/services/accounting.service';
   selector: 'app-chart-of-accounts',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, DialogModule, InputTextModule, SelectModule, ToastModule, Customtable],
-  providers: [MessageService],
   templateUrl: './chart-of-accounts.html'
 })
 export class ChartOfAccountsComponent implements OnInit {
@@ -31,10 +30,12 @@ export class ChartOfAccountsComponent implements OnInit {
     { field: 'name', header: 'Nombre de la Cuenta' },
     { field: 'account_type', header: 'Tipo' },
     { field: 'balance_type', header: 'Saldo' },
-    { field: 'is_selectable', header: 'Posteable' }
+    { field: 'is_selectable', header: 'Posteable' },
+    { field: 'actions', header: 'Acciones' }
   ];
 
   form: FormGroup = this.fb.group({
+    id: [null],
     code: ['', Validators.required],
     name: ['', Validators.required],
     account_type: ['ASSET', Validators.required],
@@ -56,7 +57,13 @@ export class ChartOfAccountsComponent implements OnInit {
     { label: 'Acreedor', value: 'CREDIT' }
   ];
 
+  // ... (accountTypes, balanceTypes kept)
+
   ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
     this.accountingService.getAccounts({rows: 1000}).subscribe(a => this.accounts.set(a.results));
   }
 
@@ -64,7 +71,7 @@ export class ChartOfAccountsComponent implements OnInit {
     this.accountingService.loadDefaultAccounts().subscribe({
       next: (res: any) => {
         this.msg.add({ severity: 'success', summary: 'Éxito', detail: res.message });
-        window.location.reload();
+        this.loadData();
       },
       error: (err) => {
         this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.error || 'No se pudo cargar el catálogo' });
@@ -73,8 +80,33 @@ export class ChartOfAccountsComponent implements OnInit {
   }
 
   openNewAccount() {
-    this.form.reset({ account_type: 'ASSET', balance_type: 'DEBIT', is_selectable: true });
+    this.form.reset({ id: null, account_type: 'ASSET', balance_type: 'DEBIT', is_selectable: true });
     this.displayModal = true;
+  }
+
+  editAccount(row: any) {
+    this.form.patchValue({
+      id: row.id,
+      code: row.code,
+      name: row.name,
+      account_type: row.account_type,
+      balance_type: row.balance_type,
+      parent: row.parent,
+      is_selectable: row.is_selectable
+    });
+    this.displayModal = true;
+  }
+
+  deleteAccount(id: number) {
+    if (confirm('¿Está seguro de eliminar esta cuenta?')) {
+      this.accountingService.deleteAccount(id).subscribe({
+        next: () => {
+          this.msg.add({ severity: 'success', summary: 'Eliminado' });
+          this.loadData();
+        },
+        error: (err) => this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se puede eliminar la cuenta, puede tener movimientos asociados.' })
+      });
+    }
   }
 
   saveAccount() {
@@ -83,13 +115,17 @@ export class ChartOfAccountsComponent implements OnInit {
     const data = { ...this.form.value };
     if (data.parent) data.parent = data.parent.id;
 
-    this.accountingService.createAccount(data).subscribe({
+    const request$ = data.id 
+      ? this.accountingService.updateAccount(data.id, data) 
+      : this.accountingService.createAccount(data);
+
+    request$.subscribe({
       next: () => {
-        this.msg.add({ severity: 'success', summary: 'Creado' });
+        this.msg.add({ severity: 'success', summary: data.id ? 'Actualizado' : 'Creado' });
         this.displayModal = false;
-        window.location.reload();
+        this.loadData();
       },
-      error: (err) => this.msg.add({ severity: 'error', summary: 'Error', detail: err.error.error || 'Error al crear cuenta' })
+      error: (err) => this.msg.add({ severity: 'error', summary: 'Error', detail: err.error.error || 'Error al guardar' })
     });
   }
 }

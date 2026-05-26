@@ -1,30 +1,43 @@
 <div class="p-4">
   <p-card>
     <ng-template pTemplate="header">
-        <div class="flex justify-between align-items-center p-4">
-            <h3 class="m-0">{{ isViewMode ? 'Detalle de Devolución #' + returnDetail()?.id : 'Nueva Devolución' }}</h3>
+        <div class="p-4 border-bottom-1 surface-border flex justify-between align-items-center">
+            <h3 class="m-0 text-2xl font-bold text-900">{{ isViewMode ? 'Detalle de Devolución #' + returnDetail()?.id : 'Nueva Devolución' }}</h3>
             <p-button label="Volver" [routerLink]="['/purchases/return']" severity="secondary" icon="pi pi-arrow-left" text></p-button>
         </div>
     </ng-template>
+    
+    @if (receiptData()) {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="p-3 surface-100 border-round">
+                <span class="block text-500 text-xs uppercase font-bold mb-1">Proveedor</span>
+                <span class="text-900 font-bold">{{ receiptData().supplier_name }}</span>
+            </div>
+            <div class="p-3 surface-100 border-round">
+                <span class="block text-500 text-xs uppercase font-bold mb-1">Factura #</span>
+                <span class="text-900 font-bold">{{ receiptData().invoice_number }}</span>
+            </div>
+            <div class="p-3 surface-100 border-round">
+                <span class="block text-500 text-xs uppercase font-bold mb-1">Recepción #</span>
+                <span class="text-900 font-bold">#{{ receiptData().id }}</span>
+            </div>
+        </div>
+    }
     
     @if (isViewMode && returnDetail()) {
         <p-card styleClass="mb-4 shadow-none border-1 surface-border">
             <div class="flex flex-row flex-wrap gap-6">
                 <div class="flex-1">
-                    <span class="block text-500 font-medium mb-1">Fecha de Devolución</span>
-                    <div class="text-900 font-bold text-lg">{{ returnDetail().created | date:'dd/MM/yyyy h:mm a' }}</div>
+                    <span class="block text-500 font-medium mb-1">Fecha</span>
+                    <div class="text-900 font-bold">{{ returnDetail().created | date:'dd/MM/yyyy' }}</div>
                 </div>
                 <div class="flex-1">
                     <span class="block text-500 font-medium mb-1">Usuario</span>
-                    <div class="text-900 font-bold text-lg">{{ returnDetail().created_by_name || 'N/A' }}</div>
-                </div>
-                <div class="flex-1">
-                    <span class="block text-500 font-medium mb-1">ID Recepción Origen</span>
-                    <div class="text-900 font-bold text-lg">#{{ returnDetail().receipt }}</div>
+                    <div class="text-900 font-bold">{{ returnDetail().created_by_name || 'N/A' }}</div>
                 </div>
                 <div class="flex-1">
                     <span class="block text-500 font-medium mb-1">Total Devolución</span>
-                    <div class="text-primary font-bold text-2xl">{{ returnDetail().total_amount | currency:'USD' }}</div>
+                    <div class="text-primary font-bold">{{ returnDetail().total_amount | currency:'USD' }}</div>
                 </div>
             </div>
         </p-card>
@@ -32,31 +45,44 @@
 
     <form [formGroup]="form" (ngSubmit)="save()">
         <div class="field mb-4">
-            <label class="font-bold">Motivo de la Devolución</label>
-            <textarea pInputTextarea formControlName="reason" class="w-full" [rows]="2" [disabled]="isViewMode"></textarea>
+            <label class="font-bold text-700 block mb-2 text-sm">Motivo de la Devolución</label>
+            <textarea pInputTextarea formControlName="reason" class="w-full" [rows]="3" placeholder="Ingrese el motivo detallado de la devolución..."></textarea>
         </div>
 
-        <h4 class="font-bold mb-3">Detalle de Materiales</h4>
+        <h4 class="font-bold text-700 mb-3 uppercase text-sm border-bottom-1 surface-border pb-2">Detalle de Materiales</h4>
         <app-customtable
             [genericCol]="returnCols"
             [loaderFunction]="dummyLoader"
-            titletable="Productos"
-            [columnTemplates]="{ 'quantity': qtyTemplate, 'unit_price': priceTemplate, 'total_line': totalTemplate }">
+            titletable=""
+            [columnTemplates]="{ 'quantity': qtyTemplate, 'received_qty': receivedQtyTemplate, 'unit_price': priceTemplate, 'total_line': totalTemplate }">
         </app-customtable>
 
+        <ng-template #receivedQtyTemplate let-item>
+             <span class="font-bold text-700">{{ item.received_qty }}</span>
+        </ng-template>
+
         <ng-template #qtyTemplate let-item>
-             <p-inputNumber [(ngModel)]="item.quantity" [ngModelOptions]="{standalone: true}" [disabled]="isViewMode"></p-inputNumber>
+             @if(!isViewMode) {
+                 <div [formGroup]="lines.at(getIndex(item)) | castToFormGroup">
+                    <p-inputNumber formControlName="quantity" (onBlur)="calculateTotal(getIndex(item))" styleClass="w-full" inputStyleClass="py-1 w-8rem"></p-inputNumber>
+                    @if (lines.at(getIndex(item)).get('quantity')?.hasError('max')) {
+                        <small class="p-error block mt-1">Excede cantidad disponible</small>
+                    }
+                 </div>
+             } @else {
+                 <span class="font-bold text-700">{{ item.quantity }}</span>
+             }
         </ng-template>
         <ng-template #priceTemplate let-item>
-             {{ item.unit_price | currency }}
+             <span class="text-700">{{ item.unit_price | currency }}</span>
         </ng-template>
         <ng-template #totalTemplate let-item>
-             {{ item.total_line | currency }}
+             <span class="font-bold text-primary">{{ (item.quantity || 0) * (item.unit_price || 0) | currency }}</span>
         </ng-template>
 
         @if (!isViewMode) {
-            <div class="flex justify-end mt-4">
-                <p-button label="Registrar Devolución" type="submit" [disabled]="form.invalid" icon="pi pi-save"></p-button>
+            <div class="flex justify-end mt-4 pt-4 border-top-1 surface-border">
+                <p-button label="Registrar Devolución" type="submit" [disabled]="form.invalid || !hasValidQuantities()" icon="pi pi-check"></p-button>
             </div>
         }
     </form>

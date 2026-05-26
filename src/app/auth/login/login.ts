@@ -12,7 +12,6 @@ import { PasswordModule } from 'primeng/password';
 @Component({
   selector: 'app-login',
   imports: [InputTextModule, ButtonModule, FormsModule, ToastModule, PasswordModule],
-  providers: [MessageService],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })

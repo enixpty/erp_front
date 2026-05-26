@@ -12,7 +12,6 @@ import { GoodsReceiptService } from '@src/app/services/goods-receipt.service';
   selector: 'app-receipt-detail',
   standalone: true,
   imports: [CommonModule, CardModule, ButtonModule, TableModule, RouterLink, ToastModule],
-  providers: [MessageService],
   templateUrl: './receipt-detail.html'
 })
 export class ReceiptDetailComponent implements OnInit {

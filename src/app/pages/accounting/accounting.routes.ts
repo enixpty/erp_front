@@ -5,11 +5,16 @@ import { JournalEntryFormComponent } from './journal-entries/journal-entry-form'
 import { JournalEntryDetailComponent } from './journal-entries/journal-entry-detail';
 import { FiscalPeriodsComponent } from './fiscal-periods/fiscal-periods';
 import { FinancialReportsComponent } from './reports/financial-reports';
+import { AccountingMappingsComponent } from './mappings/accounting-mappings';
 
 export const accountingRoutes: Routes = [
   {
     path: 'accounts',
     component: ChartOfAccountsComponent
+  },
+  {
+    path: 'mappings',
+    component: AccountingMappingsComponent
   },
   {
     path: 'entries',

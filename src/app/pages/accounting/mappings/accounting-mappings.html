@@ -18,7 +18,7 @@
     <!-- Tabla de Mapeos -->
     <p-card styleClass="shadow-lg rounded-2xl border-none">
         <app-customtable 
-            [data]="mappings()" 
+            [loaderFunction]="loaderFunction"
             [columns]="cols" 
             [columnTemplates]="{ 'event_type_display': eventTemplate, 'document_type_name': docTypeTemplate, 'account_name': accountTemplate, 'actions': actions }"
         >

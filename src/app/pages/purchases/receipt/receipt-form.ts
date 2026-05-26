@@ -48,12 +48,12 @@ export class ReceiptFormComponent implements OnInit {
         foundOrder.lines.forEach((line: any, index: number) => {
             const control = this.fb.group({
                 sku: [line.sku],
-                quantity: [line.quantity, [Validators.required, Validators.min(0), (c: any) => {
+                quantity: [null, [Validators.required, Validators.min(0), (c: any) => {
                     return (c.value > line.quantity) ? { 'exceeded': true } : null;
                 }]]
             });
             control.get('quantity')?.valueChanges.subscribe(val => {
-                if (val > line.quantity) {
+                if (val !== null && val > line.quantity) {
                     this.msg.add({ severity: 'warn', summary: 'Advertencia', detail: `La cantidad ${val} excede lo solicitado (${line.quantity}) para el SKU ${line.sku_code}.` });
                 }
             });

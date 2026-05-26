@@ -49,12 +49,15 @@ export class AccountingMappingsComponent implements OnInit {
     description: ['']
   });
 
+  loaderFunction = (params: any) => this.accountingService.getMappings(params);
+
   ngOnInit() {
     this.loadData();
   }
 
   loadData() {
-    this.accountingService.getMappings().subscribe(m => this.mappings.set(m.results || m));
+    // We don't need to manually load data here anymore if using loaderFunction
+    // But keeping it for other non-table data
     this.accountingService.getAccounts({rows: 1000}).subscribe(a => this.accounts.set(a.results || a));
     this.accountingService.getEventTypes().subscribe(e => this.eventTypes.set(e));
     this.docTypeService.getDocumentTypes({is_active: true}).subscribe(d => this.documentTypes.set(d.results || d));

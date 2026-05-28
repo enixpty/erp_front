@@ -1,0 +1,66 @@
+<ng-template #actionButtonsTemplate let-paymentType>
+    <div class="flex gap-2 justify-center">
+        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" pTooltip="Editar" (click)="editPaymentType(paymentType)"></p-button>
+        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (click)="confirmDelete(paymentType)"></p-button>
+    </div>
+</ng-template>
+
+<ng-template #statusTemplate let-paymentType>
+    <span [class]="paymentType.is_active ? 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold' : 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold'">
+        {{ paymentType.is_active ? 'Activo' : 'Inactivo' }}
+    </span>
+</ng-template>
+
+<div class="w-auto pt-2 pl-2 pr-2 h-90">     
+    <p-card>
+        <ng-template pTemplate="header">
+            <div class="flex justify-between items-center p-6">
+                <div>
+                    <h2 class="text-xl font-bold">Gestión de Tipos de Pago</h2>
+                    <p class="text-sm text-surface-500">Configura los métodos de pago (Efectivo, Tarjeta, Yappy, etc.) y enlaza con su cuenta contable.</p>
+                </div>
+                <p-button label="Nuevo Tipo de Pago" icon="pi pi-plus" [rounded]="true" (onClick)="openNew()"></p-button>
+            </div>
+        </ng-template>
+        <div class="pt-4">
+            <app-customtable [genericCol]="cols" #paymentTable [actionsTemplate]="actionButtonsTemplate" [columnTemplates]="{is_active: statusTemplate}" [loaderFunction]="paymentTypeService.getPaymentTypes.bind(paymentTypeService)"></app-customtable>
+        </div>
+    </p-card>
+</div>
+
+<p-dialog [(visible)]="displayModal" [header]="isEdit() ? 'Editar Tipo de Pago' : 'Nuevo Tipo de Pago'" [modal]="true" [style]="{ width: '450px' }" [draggable]="false" class="p-fluid">
+  <form [formGroup]="form" class="flex flex-col gap-5 pt-2">
+    <div class="field">
+      <label for="name" class="font-bold block mb-2">Nombre <span class="text-red-500">*</span></label>
+      <input pInputText id="name" formControlName="name" placeholder="Ej: Yappy, Tarjeta Clave" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label for="ledger_account" class="font-bold block mb-2">Cuenta Contable (Activo) <span class="text-red-500">*</span></label>
+      <p-select 
+        [options]="accounts()" 
+        formControlName="ledger_account" 
+        optionLabel="name" 
+        optionValue="id" 
+        placeholder="Seleccione cuenta"
+        [filter]="true"
+        [showClear]="true"
+        class="w-full">
+        <ng-template let-account pTemplate="item">
+            <div>{{account.code}} - {{account.name}}</div>
+        </ng-template>
+      </p-select>
+    </div>
+
+    <div class="flex items-center justify-between py-4 border-t border-surface-100 mt-4">
+      <span class="font-bold">Estado</span>
+      <p-toggleButton formControlName="is_active" onLabel="Activo" offLabel="Inactivo" onIcon="pi pi-check" offIcon="pi pi-times" class="w-32 shadow-none"></p-toggleButton>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-6">
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="displayModal.set(false)"></p-button>
+      <p-button [label]="isEdit() ? 'Actualizar' : 'Guardar'" [loading]="submitting()" [disabled]="form.invalid" (onClick)="save()"></p-button>
+    </div>
+  </form>
+</p-dialog>
+<p-confirmDialog [style]="{width: '350px'}" position="top"></p-confirmDialog>

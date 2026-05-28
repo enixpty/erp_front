@@ -39,6 +39,8 @@
                 <th class="p-4 text-center">Cantidad</th>
                 <th class="p-4 text-right">Precio Unit.</th>
                 <th class="p-4 text-right">Dcto.</th>
+                <th class="p-4 text-center">ITBMS %</th>
+                <th class="p-4 text-right">ITBMS</th>
                 <th class="p-4 text-right">Subtotal</th>
             </tr>
         </ng-template>
@@ -48,6 +50,8 @@
                 <td class="p-4 text-center">{{detail.quantity}}</td>
                 <td class="p-4 text-right">{{detail.price | currency}}</td>
                 <td class="p-4 text-right">{{detail.discount | currency}}</td>
+                <td class="p-4 text-center">{{detail.tax_percent}}%</td>
+                <td class="p-4 text-right">{{detail.tax | currency}}</td>
                 <td class="p-4 text-right font-bold text-surface-900">{{detail.subtotal | currency}}</td>
             </tr>
         </ng-template>
@@ -64,7 +68,7 @@
                 <span class="font-bold text-surface-800">{{invoice.subtotal | currency}}</span>
             </div>
             <div class="flex justify-between items-center text-surface-600">
-                <span>ITBMS (7%):</span>
+                <span>ITBMS Total:</span>
                 <span class="font-bold text-surface-800">{{invoice.tax | currency}}</span>
             </div>
             <p-divider></p-divider>

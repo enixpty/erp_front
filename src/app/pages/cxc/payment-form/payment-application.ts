@@ -64,8 +64,10 @@ export class PaymentApplicationComponent implements OnInit {
   onClientSelect() {
     const clientId = this.form.get('client_id')?.value;
     if (clientId) {
-      this.arService.getPendingByClient(clientId).subscribe(invoices => {
-        this.invoices = invoices.map(inv => ({ ...inv, amount_applied: 0 }));
+      this.arService.getPendingByClient(clientId).subscribe((res: any) => {
+        const pendingInvoices = res.invoices || (Array.isArray(res) ? res : []);
+        this.invoices = pendingInvoices.map((inv: any) => ({ ...inv, amount_applied: 0 }));
+        this.cd.detectChanges();
       });
     }
   }

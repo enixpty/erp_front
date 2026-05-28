@@ -67,6 +67,8 @@
                                     <th class="p-4 text-center">Cantidad</th>
                                     <th class="p-4 text-center">Precio</th>
                                     <th class="p-4 text-center">Dcto. %</th>
+                                    <th class="p-4 text-center">ITBMS %</th>
+                                    <th class="p-4 text-right">ITBMS</th>
                                     <th class="p-4 text-right">Subtotal</th>
                                     <th style="width: 50px"></th>
                                 </tr>
@@ -88,6 +90,12 @@
                                     </td>
                                     <td class="p-3">
                                         <input pInputText #discountInput type="number" formControlName="discount" (change)="calculateRowSubtotal(i)" (keydown.tab)="handleTabOnDiscount($event, i)" class="w-full text-center" [readOnly]="form.disabled" />
+                                    </td>
+                                    <td class="p-3 text-center">
+                                        <input pInputText type="number" formControlName="tax_percent" (change)="calculateRowSubtotal(i)" class="w-16 text-center" [readonly]="detail.get('tax_exempt').value || form.disabled" />
+                                    </td>
+                                    <td class="p-3 text-right text-surface-600">
+                                        {{detail.get('tax').value | currency}}
                                     </td>
                                     <td class="p-3 text-right font-bold text-surface-900">
                                         {{detail.get('subtotal').value | currency}}
@@ -129,7 +137,7 @@
                     </div>
 
                     <div class="flex justify-between items-center text-surface-600">
-                        <span class="font-medium">Impuestos (7%):</span>
+                        <span class="font-medium">ITBMS Total:</span>
                         <span class="font-bold text-surface-900">{{form.get('tax')?.value | currency}}</span>
                     </div>
                     

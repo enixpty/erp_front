@@ -62,5 +62,9 @@ export const salesRoutes: Routes = [
     {
         path: 'credit-notes/new',
         component: CreditNoteFormComponent
+    },
+    {
+        path: 'payment-types',
+        loadComponent: () => import('./payment-types/list-payment-type').then(c => c.ListPaymentTypeComponent)
     }
 ];

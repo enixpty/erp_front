@@ -11,24 +11,25 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Customtable } from '@src/app/components/customTable/customtable';
-import { CategoryService } from '@src/app/services/category.service';
-import { Category } from '@src/app/interfaces/category.interface';
+import { PaymentTypeService, PaymentType } from '@src/app/services/payment-type.service';
+import { AccountingService } from '@src/app/services/accounting.service';
 import { SelectModule } from 'primeng/select';
 
 @Component({
-  selector: 'app-list-category',
+  selector: 'app-list-payment-type',
   standalone: true,
   imports: [
     CommonModule, CardModule, ButtonModule, InputTextModule, DialogModule, 
     ReactiveFormsModule, ToggleButtonModule, TooltipModule, ToastModule, 
     ConfirmDialogModule, Customtable, SelectModule
   ],
-  templateUrl: './list-category.html'
+  templateUrl: './list-payment-type.html'
 })
-export class ListCategoryComponent implements OnInit {
-  @ViewChild('categoryTable') customTableComponent!: Customtable;
+export class ListPaymentTypeComponent implements OnInit {
+  @ViewChild('paymentTable') customTableComponent!: Customtable;
   
-  public categoryService = inject(CategoryService);
+  public paymentTypeService = inject(PaymentTypeService);
+  private accountingService = inject(AccountingService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private fb = inject(FormBuilder);
@@ -36,12 +37,12 @@ export class ListCategoryComponent implements OnInit {
   displayModal = signal<boolean>(false);
   submitting = signal<boolean>(false);
   isEdit = signal<boolean>(false);
-  categories = signal<Category[]>([]);
+  accounts = signal<any[]>([]);
 
   cols = [
     { field: 'name', header: 'Nombre', order: true, filter: true },
-    { field: 'tax_percent', header: 'ITBMS (%)', order: true, filter: false },
-    { field: 'status', header: 'Estado', order: true, filter: true },
+    { field: 'ledger_account_name', header: 'Cuenta Contable', order: true, filter: true },
+    { field: 'is_active', header: 'Estado', order: true, filter: true },
     { field: 'action', header: '', order: false, filter: false }
   ];
 
@@ -51,36 +52,30 @@ export class ListCategoryComponent implements OnInit {
     this.form = this.fb.group({
       id: [null],
       name: ['', [Validators.required, Validators.maxLength(100)]],
-      parent: [null],
-      stock_min_default: [0.0],
-      stock_max_default: [0.0],
-      tax_percent: [7.00, [Validators.required, Validators.min(0)]],
-      status: [true]
+      ledger_account: [null, [Validators.required]],
+      is_active: [true]
     });
   }
 
   ngOnInit() {
-    this.loadAllCategories();
+    this.loadAccounts();
   }
 
-  loadAllCategories() {
-    this.categoryService.getCategories({ rows: 1000 }).subscribe(resp => {
-      this.categories.set(resp.results);
+  loadAccounts() {
+    this.accountingService.getAccounts({ type: 'ASSET' }).subscribe(resp => {
+      this.accounts.set(resp.results || resp);
     });
   }
 
   openNew() {
     this.isEdit.set(false);
-    this.form.reset({ status: true });
+    this.form.reset({ is_active: true });
     this.displayModal.set(true);
   }
 
-  editCategory(category: Category) {
+  editPaymentType(paymentType: PaymentType) {
     this.isEdit.set(true);
-    this.form.patchValue({
-      ...category,
-      status: category.status === '1'
-    });
+    this.form.patchValue(paymentType);
     this.displayModal.set(true);
   }
 
@@ -89,18 +84,14 @@ export class ListCategoryComponent implements OnInit {
 
     this.submitting.set(true);
     const formValue = this.form.value;
-    const categoryData: Category = {
-      ...formValue,
-      status: formValue.status ? '1' : '0'
-    };
     
     const request = this.isEdit() 
-      ? this.categoryService.updateCategory(categoryData)
-      : this.categoryService.createCategory(categoryData);
+      ? this.paymentTypeService.updatePaymentType(formValue)
+      : this.paymentTypeService.createPaymentType(formValue);
 
     request.subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Categoría guardada' });
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Tipo de Pago guardado' });
         this.displayModal.set(false);
         this.submitting.set(false);
         this.refreshTable();
@@ -112,17 +103,17 @@ export class ListCategoryComponent implements OnInit {
     });
   }
 
-  confirmDelete(category: Category) {
+  confirmDelete(paymentType: PaymentType) {
     this.confirmationService.confirm({
-      message: `¿Deseas eliminar la categoría "${category.name}"?`,
+      message: `¿Deseas eliminar el tipo de pago "${paymentType.name}"?`,
       header: 'Confirmar Acción',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Eliminar',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger p-button-sm',
       accept: () => {
-        this.categoryService.deleteCategory(category.id!).subscribe(() => {
-          this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Categoría borrada' });
+        this.paymentTypeService.deletePaymentType(paymentType.id!).subscribe(() => {
+          this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Tipo de Pago borrado' });
           this.refreshTable();
         });
       }

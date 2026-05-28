@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild, ElementRef, ViewChildren, QueryList, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef, ViewChildren, QueryList, ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -12,6 +12,7 @@ import { ConfirmationService, MessageService, MenuItem } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SplitButtonModule } from 'primeng/splitbutton';
+import { DialogModule } from 'primeng/dialog';
 import { QuotationService } from '@src/app/services/quotation.service';
 import { ClientService } from '@src/app/services/client.service';
 import { SkuService } from '@src/app/services/sku.service';
@@ -22,7 +23,7 @@ import { WarehouseService } from '@src/app/services/warehouse.service';
 @Component({
   selector: 'app-quotation-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, Toast, RouterLink, ConfirmDialogModule, SplitButtonModule],
+  imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, Toast, RouterLink, ConfirmDialogModule, SplitButtonModule, DialogModule],
   providers: [MessageService, ConfirmationService],
   templateUrl: './quotation-form.html'
 })
@@ -61,6 +62,8 @@ export class QuotationFormComponent implements OnInit {
   actionItems: MenuItem[] = [];
   isEdit = false;
   buttonLabel = 'Guardar';
+  showWarehouseDialog = signal<boolean>(false);
+  selectedWarehouseId: number | null = null;
   isLoaded = false;
 
   statusOptions = [
@@ -136,26 +139,23 @@ export class QuotationFormComponent implements OnInit {
       return;
     }
 
-    // Si solo hay una bodega, usarla directamente o preguntar igual para confirmar
     if (this.warehouses.length === 1) {
       this.confirmConversion(this.warehouses[0]);
       return;
     }
 
-    this.confirmationService.confirm({
-      header: 'Seleccionar Bodega de Despacho',
-      message: 'Por favor seleccione la bodega desde la cual se reservará el inventario.',
-      icon: 'pi pi-building',
-      acceptLabel: 'Confirmar',
-      rejectLabel: 'Cancelar',
-      accept: () => {
-        // En una implementación real con PrimeNG ConfirmDialog, 
-        // podrías inyectar un componente o simplemente usar la primera por ahora 
-        // hasta que tengamos un diálogo de selección formal.
-        // Para este ERP, usaremos la primera bodega activa.
-        this.confirmConversion(this.warehouses[0]);
-      }
-    });
+    this.selectedWarehouseId = null;
+    this.showWarehouseDialog.set(true);
+  }
+
+  onConfirmWarehouse() {
+    const warehouse = this.warehouses.find(w => w.id === this.selectedWarehouseId);
+    if (!warehouse) {
+      this.msg.add({ severity: 'warn', summary: 'Atención', detail: 'Seleccione una bodega.' });
+      return;
+    }
+    this.showWarehouseDialog.set(false);
+    this.confirmConversion(warehouse);
   }
 
   confirmConversion(warehouse: any) {
@@ -238,7 +238,7 @@ export class QuotationFormComponent implements OnInit {
 
   loadSkus(): Promise<any> {
     return new Promise((resolve) => {
-        this.skuService.getSkus({}).subscribe(data => {
+        this.skuService.getSkus({ nopaginate: true }).subscribe(data => {
             const rawSkus = data.results || data;
             this.skus = rawSkus.map((sku: any) => ({
                 ...sku,
@@ -250,7 +250,7 @@ export class QuotationFormComponent implements OnInit {
     });
   }
 
-  addDetail(detail?: QuotationDetail) {
+  addDetail(detail?: any) {
     const detailForm = this.fb.group({
       id: [detail?.id || null],
       sku: [detail?.sku || null, Validators.required],
@@ -258,6 +258,8 @@ export class QuotationFormComponent implements OnInit {
       price: [detail?.price || 0, [Validators.required, Validators.min(0)]],
       discount: [detail?.discount || 0, [Validators.min(0)]],
       tax_exempt: [detail?.tax_exempt || false],
+      tax_percent: [detail?.tax_percent || 7.00],
+      tax: [detail?.tax || 0],
       subtotal: [detail?.subtotal || 0]
     });
     this.details.push(detailForm);
@@ -284,7 +286,8 @@ export class QuotationFormComponent implements OnInit {
     if (selectedSku) {
       detail.patchValue({
         price: selectedSku.sell_price,
-        tax_exempt: selectedSku.tax_exempt
+        tax_exempt: selectedSku.tax_exempt,
+        tax_percent: selectedSku.tax_percent !== undefined ? parseFloat(selectedSku.tax_percent) : 7.00
       });
       this.calculateRowSubtotal(index);
     }
@@ -296,30 +299,35 @@ export class QuotationFormComponent implements OnInit {
     const price = detail.get('price')?.value || 0;
     const disc = detail.get('discount')?.value || 0;
     const subtotal = (qty * price) - disc;
-    detail.get('subtotal')?.setValue(subtotal);
+
+    const isExempt = detail.get('tax_exempt')?.value;
+    const taxPercent = isExempt ? 0 : (detail.get('tax_percent')?.value || 0);
+    const tax = subtotal * (taxPercent / 100);
+
+    detail.patchValue({ subtotal, tax }, { emitEvent: false });
     this.calculateTotals();
   }
 
   calculateTotals() {
     let subtotal = 0;
-    let taxableAmount = 0;
+    let totalTaxBeforeDiscount = 0;
     const globalDiscountPercent = this.form.get('global_discount')?.value || 0;
 
     this.details.controls.forEach(control => {
       const rowSubtotal = control.get('subtotal')?.value || 0;
       subtotal += rowSubtotal;
-      
-      if (!control.get('tax_exempt')?.value) {
-        taxableAmount += rowSubtotal;
-      }
+
+      const taxPercent = control.get('tax_exempt')?.value ? 0 : (control.get('tax_percent')?.value || 0);
+      const rowTax = rowSubtotal * (taxPercent / 100);
+      totalTaxBeforeDiscount += rowTax;
     });
 
     const discountAmount = subtotal * (globalDiscountPercent / 100);
-    const taxableAfterDiscount = Math.max(0, taxableAmount * (1 - (globalDiscountPercent / 100)));
-    
-    const tax = taxableAfterDiscount * 0.07;
+    const globalTaxDiscount = totalTaxBeforeDiscount * (globalDiscountPercent / 100);
+
+    const tax = totalTaxBeforeDiscount - globalTaxDiscount;
     const total = (subtotal - discountAmount) + tax;
-    
+
     this.form.patchValue({ subtotal, tax, total }, { emitEvent: false });
   }
 
@@ -339,6 +347,8 @@ export class QuotationFormComponent implements OnInit {
         quantity: Number(Number(d.quantity || 0).toFixed(4)),
         price: Number(Number(d.price || 0).toFixed(4)),
         discount: Number(Number(d.discount || 0).toFixed(4)),
+        tax_percent: Number(Number(d.tax_percent || 0).toFixed(2)),
+        tax: Number(Number(d.tax || 0).toFixed(4)),
         subtotal: Number(Number(d.subtotal || 0).toFixed(4))
     }));
 

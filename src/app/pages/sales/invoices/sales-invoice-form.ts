@@ -9,7 +9,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { DividerModule } from 'primeng/divider';
 import { DatePickerModule } from 'primeng/datepicker';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
 import { environment } from '@src/environments/environment';
 import { SalesInvoiceService } from '@src/app/services/sales-invoice.service';
@@ -21,8 +22,8 @@ import { AccountingService } from '@src/app/services/accounting.service';
 @Component({
   selector: 'app-sales-invoice-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, DatePickerModule, Toast, RouterLink],
-  providers: [MessageService],
+  imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, DatePickerModule, Toast, RouterLink, ConfirmDialogModule],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './sales-invoice-form.html'
 })
 export class SalesInvoiceFormComponent implements OnInit {
@@ -33,6 +34,7 @@ export class SalesInvoiceFormComponent implements OnInit {
   private warehouseService = inject(WarehouseService);
   private accountingService = inject(AccountingService);
   private msg = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
   private router = inject(Router);
   private cd = inject(ChangeDetectorRef);
 
@@ -52,7 +54,8 @@ export class SalesInvoiceFormComponent implements OnInit {
     notes: [''],
     send_by_email: [false],
     email_target: [''],
-    details: this.fb.array([])
+    details: this.fb.array([]),
+    payments: this.fb.array([])
   });
 
   // Getter para tipos de documento filtrados
@@ -79,10 +82,15 @@ export class SalesInvoiceFormComponent implements OnInit {
   skus: any[] = [];
   warehouses: any[] = [];
   documentTypes: any[] = [];
+  paymentTypes: any[] = [];
   isLoaded = false;
 
   get details() {
     return this.form.get('details') as FormArray;
+  }
+  
+  get payments() {
+    return this.form.get('payments') as FormArray;
   }
 
   ngOnInit() {
@@ -105,6 +113,15 @@ export class SalesInvoiceFormComponent implements OnInit {
           }
         });
       }
+      
+      const docType = this.documentTypes.find(d => d.id === val);
+      if (docType && docType.payment_term === 'CASH') {
+          if (this.payments.length === 0) {
+              this.addPayment();
+          }
+      } else {
+          this.payments.clear();
+      }
     });
   }
 
@@ -122,7 +139,19 @@ export class SalesInvoiceFormComponent implements OnInit {
         this.cd.detectChanges();
     });
     
-    this.skuService.getSkus({}).subscribe(data => {
+    // Obtener PaymentTypes a través de HTTP GET genérico o InvoiceService
+    // Usaremos el AccountingService u otra forma si no existe en invoiceService, pero
+    // por ahora podemos usar fetch manual o crear método temporal
+    fetch(`${environment.apiUrl}/sales/payment-types/`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        this.paymentTypes = data.results || data;
+        this.cd.detectChanges();
+    });
+    
+    this.skuService.getSkus({ nopaginate: true }).subscribe(data => {
         this.skus = (data.results || data).map((s: any) => ({ ...s, searchLabel: `${s.code} - ${s.name}` }));
         if (this.details.length === 0) {
             this.addDetail();
@@ -139,9 +168,24 @@ export class SalesInvoiceFormComponent implements OnInit {
       price: [0, [Validators.required, Validators.min(0)]],
       discount: [0, [Validators.min(0)]],
       tax_exempt: [false],
+      tax_percent: [7.00],
+      tax: [0],
       subtotal: [0]
     });
     this.details.push(detailForm);
+  }
+
+  addPayment() {
+    const paymentForm = this.fb.group({
+      payment_type: [null, Validators.required],
+      amount: [0, [Validators.required, Validators.min(0.01)]],
+      reference: ['']
+    });
+    this.payments.push(paymentForm);
+  }
+
+  removePayment(index: number) {
+    this.payments.removeAt(index);
   }
 
   removeDetail(index: number) {
@@ -156,7 +200,8 @@ export class SalesInvoiceFormComponent implements OnInit {
     if (selectedSku) {
       detail.patchValue({
         price: selectedSku.sell_price,
-        tax_exempt: selectedSku.tax_exempt
+        tax_exempt: selectedSku.tax_exempt,
+        tax_percent: selectedSku.tax_percent !== undefined ? parseFloat(selectedSku.tax_percent) : 7.00
       });
       this.calculateRowSubtotal(index);
     }
@@ -168,31 +213,42 @@ export class SalesInvoiceFormComponent implements OnInit {
     const price = detail.get('price')?.value || 0;
     const disc = detail.get('discount')?.value || 0;
     const subtotal = (qty * price) - disc;
-    detail.get('subtotal')?.setValue(subtotal);
+    
+    const isExempt = detail.get('tax_exempt')?.value;
+    const taxPercent = isExempt ? 0 : (detail.get('tax_percent')?.value || 0);
+    const tax = subtotal * (taxPercent / 100);
+    
+    detail.patchValue({ subtotal, tax }, { emitEvent: false });
     this.calculateTotals();
   }
 
   calculateTotals() {
     let subtotal = 0;
-    let taxableAmount = 0;
-    const globalDiscountPercent = this.form.get('global_discount')?.value || 0;
+    let totalTaxBeforeDiscount = 0;
+    let globalTaxDiscount = 0;
 
     this.details.controls.forEach(control => {
       const rowSubtotal = control.get('subtotal')?.value || 0;
       subtotal += rowSubtotal;
       
-      if (!control.get('tax_exempt')?.value) {
-        taxableAmount += rowSubtotal;
-      }
+      const taxPercent = control.get('tax_exempt')?.value ? 0 : (control.get('tax_percent')?.value || 0);
+      const rowTax = rowSubtotal * (taxPercent / 100);
+      totalTaxBeforeDiscount += rowTax;
     });
 
+    const globalDiscountPercent = this.form.get('global_discount')?.value || 0;
     const discountAmount = subtotal * (globalDiscountPercent / 100);
-    const taxableAfterDiscount = Math.max(0, taxableAmount * (1 - (globalDiscountPercent / 100)));
+    globalTaxDiscount = totalTaxBeforeDiscount * (globalDiscountPercent / 100);
     
-    const tax = taxableAfterDiscount * 0.07;
+    const tax = totalTaxBeforeDiscount - globalTaxDiscount;
     const total = (subtotal - discountAmount) + tax;
     
     this.form.patchValue({ subtotal, tax, total }, { emitEvent: false });
+    
+    // Auto-completar el monto en los pagos si es CASH y hay un solo pago
+    if (this.payments.length === 1) {
+        this.payments.at(0).get('amount')?.setValue(total);
+    }
   }
 
   save() {
@@ -216,6 +272,22 @@ export class SalesInvoiceFormComponent implements OnInit {
         return;
     }
 
+    if (docType && docType.payment_term === 'CASH') {
+        const totalPayments = this.payments.value.reduce((acc: number, p: any) => acc + (p.amount || 0), 0);
+        const invoiceTotal = this.form.get('total')?.value || 0;
+        
+        // Redondear a 2 decimales para evitar problemas de coma flotante
+        const diff = Math.abs(totalPayments - invoiceTotal);
+        if (diff > 0.01) {
+            this.msg.add({ 
+                severity: 'error', 
+                summary: 'Diferencia en Pagos', 
+                detail: `La suma de los pagos (${totalPayments.toFixed(2)}) no coincide con el total de la factura (${invoiceTotal.toFixed(2)}).` 
+            });
+            return;
+        }
+    }
+
     const formData = { ...this.form.value };
     if (formData.due_date instanceof Date) {
         formData.due_date = formData.due_date.toISOString().split('T')[0];
@@ -223,15 +295,28 @@ export class SalesInvoiceFormComponent implements OnInit {
     
     this.invoiceService.createInvoice(formData).subscribe({
       next: (res) => {
-        this.msg.add({ severity: 'success', summary: 'Éxito', detail: `Factura ${res.document_number} generada` });
-        
-        // Abrir PDF siempre
-        this.invoiceService.printInvoice(res.id).subscribe((blob: Blob) => {
-            const url = window.URL.createObjectURL(blob);
-            window.open(url, '_blank');
-        });
+        if (res.status === 'PENDING_AUTHORIZATION') {
+          this.confirmationService.confirm({
+            message: `La factura ${res.document_number} ha sido creada pero requiere AUTORIZACIÓN de un supervisor debido a límites de crédito o descuentos. No se generará el PDF hasta que sea aprobada.`,
+            header: 'Autorización Requerida',
+            icon: 'pi pi-exclamation-triangle',
+            rejectVisible: false,
+            acceptLabel: 'Entendido',
+            accept: () => {
+              this.router.navigate(['/sales/invoices']);
+            }
+          });
+        } else {
+          this.msg.add({ severity: 'success', summary: 'Éxito', detail: `Factura ${res.document_number} generada` });
+          
+          // Abrir PDF solo si está aprobada/pagada
+          this.invoiceService.printInvoice(res.id).subscribe((blob: Blob) => {
+              const url = window.URL.createObjectURL(blob);
+              window.open(url, '_blank');
+          });
 
-        setTimeout(() => this.router.navigate(['/sales/invoices']), 1500);
+          setTimeout(() => this.router.navigate(['/sales/invoices']), 1500);
+        }
       },
       error: (err) => {
         const errorMsg = err.error.error || 'Error al facturar';

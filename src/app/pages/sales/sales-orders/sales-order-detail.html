@@ -35,6 +35,8 @@
                 <th class="p-4">SKU</th>
                 <th class="p-4 text-right">Cantidad</th>
                 <th class="p-4 text-right">Precio</th>
+                <th class="p-4 text-center">ITBMS %</th>
+                <th class="p-4 text-right">ITBMS</th>
                 <th class="p-4 text-right">Subtotal</th>
             </tr>
         </ng-template>
@@ -43,6 +45,8 @@
                 <td class="p-4">{{detail.sku_code}} - {{detail.sku_name}}</td>
                 <td class="p-4 text-right">{{detail.quantity}}</td>
                 <td class="p-4 text-right">{{detail.price | currency}}</td>
+                <td class="p-4 text-center">{{detail.tax_percent}}%</td>
+                <td class="p-4 text-right">{{detail.tax | currency}}</td>
                 <td class="p-4 text-right font-bold">{{detail.subtotal | currency}}</td>
             </tr>
         </ng-template>

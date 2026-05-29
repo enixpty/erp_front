@@ -117,7 +117,7 @@
                                         <input type="checkbox" formControlName="tax_exempt" (change)="calculateRowSubtotal(i)" class="w-5 h-5 accent-primary" />
                                     </td>
                                     <td class="p-3 text-center">
-                                        <input pInputText type="number" formControlName="tax_percent" (change)="calculateRowSubtotal(i)" class="w-16 text-center" [readonly]="detail.get('tax_exempt').value" />
+                                        <input pInputText type="number" formControlName="tax_percent" (change)="calculateRowSubtotal(i)" class="w-16 text-center" [readonly]="true" />
                                     </td>
                                     <td class="p-3 text-right text-surface-600">
                                         {{detail.get('tax').value | currency}}

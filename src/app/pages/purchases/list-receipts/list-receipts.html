@@ -28,7 +28,9 @@
     <div class="flex gap-2 justify-center">
         <p-button icon="pi pi-undo" [text]="true" severity="help" pTooltip="Devolver Mercancía" [routerLink]="['/purchases/return/new']" [queryParams]="{ receiptId: rec.id }"></p-button>
         <p-button icon="pi pi-file-pdf" [text]="true" severity="secondary" pTooltip="Imprimir Comprobante" (onClick)="downloadPdf(rec.id)"></p-button>
-        <p-button icon="pi pi-receipt" [text]="true" severity="success" pTooltip="Facturar" (onClick)="navigateToInvoice(rec.id)"></p-button>
+        @if (!rec.is_invoiced) {
+            <p-button icon="pi pi-receipt" [text]="true" severity="success" pTooltip="Facturar" (onClick)="navigateToInvoice(rec.id)"></p-button>
+        }
         <p-button icon="pi pi-eye" [text]="true" severity="info" pTooltip="Ver Detalle" [routerLink]="['/purchases/receipt-detail', rec.id]"></p-button>
     </div>
 </ng-template>

@@ -51,7 +51,7 @@ export class OrderFormComponent implements OnInit {
     const freight = parseFloat(this.form.get('freight_cost')?.value) || 0;
     const insurance = parseFloat(this.form.get('insurance_cost')?.value) || 0;
     const rate = parseFloat(this.form.get('tax_rate')?.value) || 0;
-    const val = (this.subtotal + freight + insurance) * (rate / 100);
+    const val = Math.floor((this.subtotal + freight + insurance) * (rate / 100) * 100) / 100;
     return Number(val);
   }
 
@@ -59,7 +59,7 @@ export class OrderFormComponent implements OnInit {
     const freight = parseFloat(this.form.get('freight_cost')?.value) || 0;
     const insurance = parseFloat(this.form.get('insurance_cost')?.value) || 0; 
     const val = this.subtotal + this.taxAmount + freight + insurance;
-    return Number(val);
+    return parseFloat(val.toFixed(2));
   }
 
   ngOnInit() {

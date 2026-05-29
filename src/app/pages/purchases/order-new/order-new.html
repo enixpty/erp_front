@@ -48,7 +48,9 @@
                             <th class="p-3">Descripción</th>
                             <th class="p-3 w-32">Cantidad</th>
                             <th class="p-3 w-40">Precio</th>
-                            <th class="p-3 w-40 text-right">Total</th>
+                            <th class="p-3 w-32 text-right">Subtotal</th>
+                            <th class="p-3 w-32 text-right">ITBMS</th>
+                            <th class="p-3 w-32 text-right">Total</th>
                             <th class="p-3 w-12"></th>
                         </tr>
                     </thead>
@@ -62,7 +64,9 @@
                             <td class="p-3"><input pInputText formControlName="description" readonly class="w-full bg-surface-50"></td>
                             <td class="p-3"><p-inputNumber formControlName="quantity" class="w-full"></p-inputNumber></td>
                             <td class="p-3"><p-inputNumber formControlName="unit_price" mode="currency" currency="USD" class="w-full"></p-inputNumber></td>
-                            <td class="p-3 text-right font-bold">{{ (line.get('quantity')?.value * line.get('unit_price')?.value)   }}</td>
+                            <td class="p-3 text-right font-semibold">{{ getLineSubtotal(line) | currency:'USD' }}</td>
+                            <td class="p-3 text-right text-surface-600">{{ getLineTax(line) | currency:'USD' }}</td>
+                            <td class="p-3 text-right font-bold text-primary-600">{{ getLineTotal(line) | currency:'USD' }}</td>
                             <td class="p-3"><p-button icon="pi pi-trash" severity="danger" [text]="true" (click)="lines.removeAt(i)"></p-button></td>
                         </tr>
                     </tbody>

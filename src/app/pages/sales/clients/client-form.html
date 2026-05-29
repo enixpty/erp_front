@@ -27,18 +27,18 @@
 
             <div class="md:col-span-4 flex flex-col gap-2">
                 <label for="client_type" class="text-sm font-bold">Tipo de Cliente <span class="text-red-500">*</span></label>
-                <p-select [options]="clientTypes" formControlName="client_type" optionLabel="label" optionValue="value" placeholder="Seleccione Tipo" class="w-full"></p-select>
+                <p-select [options]="clientTypes" formControlName="client_type" optionLabel="label" optionValue="value" placeholder="Seleccione Tipo" class="w-full" appendTo="body"></p-select>
             </div>
 
             <div class="md:col-span-4 flex flex-col gap-2">
                 <label for="status" class="text-sm font-bold">Estado <span class="text-red-500">*</span></label>
-                <p-select [options]="statusOptions" formControlName="status" optionLabel="label" optionValue="value" class="w-full"></p-select>
+                <p-select [options]="statusOptions" formControlName="status" optionLabel="label" optionValue="value" class="w-full" appendTo="body"></p-select>
             </div>
 
             <div class="md:col-span-12 flex flex-col gap-2">
                 <label for="parent" class="text-sm font-bold">Empresa Principal / Grupo Corporativo</label>
                 <p-select [options]="clientOptions" formControlName="parent" optionLabel="first_name" optionValue="id" 
-                    placeholder="Seleccione Empresa Principal (Opcional)" [filter]="true" [showClear]="true" class="w-full">
+                    placeholder="Seleccione Empresa Principal (Opcional)" [filter]="true" [showClear]="true" class="w-full" appendTo="body">
                 </p-select>
                 <small class="text-surface-500 italic">Si este cliente es un proyecto o subsidiaria, seleccione la empresa dueña del crédito.</small>
             </div>
@@ -83,13 +83,13 @@
 
             <div class="md:col-span-4 flex flex-col gap-2">
                 <label for="payment_term" class="text-sm font-bold">Términos de Pago <span class="text-red-500">*</span></label>
-                <p-select [options]="paymentTerms" formControlName="payment_term" optionLabel="label" optionValue="value" placeholder="Seleccione Término" class="w-full"></p-select>
+                <p-select [options]="paymentTerms" formControlName="payment_term" optionLabel="label" optionValue="value" placeholder="Seleccione Término" class="w-full" appendTo="body"></p-select>
             </div>
 
             @if (form.get('payment_term')?.value === 'CREDIT') {
                 <div class="md:col-span-4 flex flex-col gap-2">
                     <label for="credit_days" class="text-sm font-bold">Días de Vencimiento <span class="text-red-500">*</span></label>
-                    <p-select [options]="creditDaysOptions" formControlName="credit_days" optionLabel="label" optionValue="value" placeholder="Seleccione Plazo" class="w-full"></p-select>
+                    <p-select [options]="creditDaysOptions" formControlName="credit_days" optionLabel="label" optionValue="value" placeholder="Seleccione Plazo" class="w-full" appendTo="body"></p-select>
                 </div>
                 <div class="md:col-span-4 flex flex-col gap-2">
                     <label for="credit_limit" class="text-sm font-bold">Límite de Crédito <span class="text-red-500">*</span></label>

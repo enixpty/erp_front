@@ -45,7 +45,8 @@
         placeholder="Seleccione cuenta"
         [filter]="true"
         [showClear]="true"
-        class="w-full">
+        class="w-full"
+        appendTo="body">
         <ng-template let-account pTemplate="item">
             <div>{{account.code}} - {{account.name}}</div>
         </ng-template>

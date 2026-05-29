@@ -46,6 +46,9 @@ export class QuotationFormComponent implements OnInit {
   form: FormGroup = this.fb.group({
     id: [null],
     client: [null, Validators.required],
+    customer_name: [''],
+    send_by_email: [false],
+    email_target: [''],
     expiration_date: [null, Validators.required],
     status: ['DRAFT', Validators.required],
     global_discount: [0, [Validators.min(0)]],
@@ -55,6 +58,11 @@ export class QuotationFormComponent implements OnInit {
     notes: [''],
     details: this.fb.array([])
   });
+
+  get showCustomerName() {
+    const client = this.clients.find(c => c.id === this.form.get('client')?.value);
+    return client && client.payment_term === 'CASH';
+  }
 
   clients: any[] = [];
   skus: any[] = [];
@@ -360,7 +368,10 @@ export class QuotationFormComponent implements OnInit {
       next: (res) => {
         this.msg.add({ severity: 'success', summary: 'Éxito', detail: `Cotización ${this.isEdit ? 'actualizada' : 'registrada'}` });
         if (!this.isEdit && res.id) {
-            window.open(`/api/sales/quotations/${res.id}/print/`, '_blank');
+            this.quotationService.printQuotation(res.id).subscribe((blob: Blob) => {
+                const url = window.URL.createObjectURL(blob);
+                window.open(url, '_blank');
+            });
         }
         setTimeout(() => this.router.navigate(['/sales/quotations']), 1000);
       },

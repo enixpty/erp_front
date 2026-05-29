@@ -13,7 +13,7 @@ export interface PaymentType {
 @Injectable({ providedIn: 'root' })
 export class PaymentTypeService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/sales/payment-types/`;
+  private apiUrl = `${environment.apiUrl}/api/sales/payment-types/`;
 
   getPaymentTypes(params?: any) { return this.http.get<any>(this.apiUrl, { params }); }
   createPaymentType(data: PaymentType) { return this.http.post<PaymentType>(this.apiUrl, data); }

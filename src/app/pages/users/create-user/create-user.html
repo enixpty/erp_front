@@ -26,7 +26,7 @@
                 <label for="active" class="block text-sm font-medium mb-1">Estado</label>
                 <p-select [options]="status" [(ngModel)]="selected"
                     class="flex-auto w-full"  
-                    optionLabel="description" placeholder="Seleccionar" />
+                    optionLabel="description" placeholder="Seleccionar" appendTo="body" />
                 @if (isStatusRequired()) {
                     <p-message severity="error" size="small" 
                         variant="simple">El Estado es requerido</p-message>
@@ -37,7 +37,7 @@
                 <label for="role" class="block text-sm font-medium mb-1">Rol</label>
                 <p-select [options]="roles" [(ngModel)]="selectedRole"
                     class="flex-auto w-full"  
-                    optionLabel="name" placeholder="Seleccionar rol" />
+                    optionLabel="name" placeholder="Seleccionar rol" appendTo="body" />
                 @if (isRoleRequired()) {
                     <p-message severity="error" size="small" 
                         variant="simple">El Rol es requerido</p-message>

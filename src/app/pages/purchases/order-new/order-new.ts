@@ -59,27 +59,41 @@ export class OrderNewComponent implements OnInit {
     const insurance = parseFloat(this.form.get('insurance_cost')?.value || 0);
     const taxRate = parseFloat(this.form.get('tax_rate')?.value || 0);
 
-    const linesTotal = this.lines.controls.reduce((acc: number, control: any) => {
-        const qty = parseFloat(control.get('quantity')?.value || 0);
-        const price = parseFloat(control.get('unit_price')?.value || 0);
-        return acc + (qty * price);
-    }, 0);
-
-    const baseAmount = linesTotal + freight + insurance;
-    const tax = baseAmount * (taxRate / 100);
-    return parseFloat(tax.toFixed(6));
+    const baseAmount = this.subtotal + freight + insurance;
+    const tax = Math.floor(baseAmount * (taxRate / 100) * 100) / 100;
+    return tax;
   }
 
   get total(): number {
     const freight = parseFloat(this.form.get('freight_cost')?.value || 0);
     const insurance = parseFloat(this.form.get('insurance_cost')?.value || 0);
     const total = this.subtotal + this.taxAmount + freight + insurance;
-    return parseFloat(total.toFixed(6));
+    return parseFloat(total.toFixed(2));
   }
 
   get taxRateDisplay(): string {
     const rate = this.form.get('tax_rate')?.value || 0;
     return (rate).toFixed(4) + ' %';
+  }
+
+  getLineTax(line: any): number {
+    const qty = parseFloat(line.get('quantity')?.value || 0);
+    const price = parseFloat(line.get('unit_price')?.value || 0);
+    const rate = parseFloat(this.form.get('tax_rate')?.value || 0);
+    return Math.round((qty * price) * (rate / 100) * 100) / 100;
+  }
+
+  getLineSubtotal(line: any): number {
+    const qty = parseFloat(line.get('quantity')?.value || 0);
+    const price = parseFloat(line.get('unit_price')?.value || 0);
+    return qty * price;
+  }
+
+  getLineTotal(line: any): number {
+    const qty = parseFloat(line.get('quantity')?.value || 0);
+    const price = parseFloat(line.get('unit_price')?.value || 0);
+    const subtotal = qty * price;
+    return subtotal + this.getLineTax(line);
   }
 
   ngOnInit() {

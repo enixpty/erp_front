@@ -18,6 +18,7 @@ import { ClientService } from '@src/app/services/client.service';
 import { SkuService } from '@src/app/services/sku.service';
 import { WarehouseService } from '@src/app/services/warehouse.service';
 import { AccountingService } from '@src/app/services/accounting.service';
+import { PaymentTypeService } from '@src/app/services/payment-type.service';
 
 @Component({
   selector: 'app-sales-invoice-form',
@@ -33,6 +34,7 @@ export class SalesInvoiceFormComponent implements OnInit {
   private skuService = inject(SkuService);
   private warehouseService = inject(WarehouseService);
   private accountingService = inject(AccountingService);
+  private paymentTypeService = inject(PaymentTypeService);
   private msg = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private router = inject(Router);
@@ -139,14 +141,7 @@ export class SalesInvoiceFormComponent implements OnInit {
         this.cd.detectChanges();
     });
     
-    // Obtener PaymentTypes a través de HTTP GET genérico o InvoiceService
-    // Usaremos el AccountingService u otra forma si no existe en invoiceService, pero
-    // por ahora podemos usar fetch manual o crear método temporal
-    fetch(`${environment.apiUrl}/sales/payment-types/`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    })
-    .then(res => res.json())
-    .then(data => {
+    this.paymentTypeService.getPaymentTypes({ is_active: true }).subscribe(data => {
         this.paymentTypes = data.results || data;
         this.cd.detectChanges();
     });

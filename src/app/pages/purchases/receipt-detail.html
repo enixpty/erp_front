@@ -4,7 +4,9 @@
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <h2 class="text-xl md:text-2xl font-bold text-surface-800">Recepción #{{ receipt().id }}</h2>
         <div class="flex flex-wrap gap-2 w-full md:w-auto">
-          <p-button label="Facturar" icon="pi pi-receipt" severity="success" [routerLink]="['/purchases/bill/new']" [queryParams]="{receiptId: receipt().id}" class="flex-1 md:flex-none"></p-button>
+          @if (!receipt().is_invoiced) {
+            <p-button label="Facturar" icon="pi pi-receipt" severity="success" [routerLink]="['/purchases/bill/new']" [queryParams]="{receiptId: receipt().id}" class="flex-1 md:flex-none"></p-button>
+          }
           <p-button label="PDF" icon="pi pi-file-pdf" severity="info" (click)="printPDF()" class="flex-1 md:flex-none"></p-button>
           <p-button label="Devolver" icon="pi pi-undo" severity="danger" [routerLink]="['/purchases/return/new']" [queryParams]="{receiptId: receipt().id}" class="flex-1 md:flex-none"></p-button>
           <p-button label="Volver" icon="pi pi-arrow-left" severity="secondary" [routerLink]="['/purchases/receipts']" class="flex-1 md:flex-none"></p-button>

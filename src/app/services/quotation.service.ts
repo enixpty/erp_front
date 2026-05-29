@@ -34,4 +34,8 @@ export class QuotationService {
   convertQuotation(id: number, warehouseId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/${id}/convert/`, { warehouse_id: warehouseId });
   }
+
+  printQuotation(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/print/`, { responseType: 'blob' });
+  }
 }

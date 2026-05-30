@@ -1,45 +1,203 @@
-<div class="p-4">
-  <p-card>
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold text-surface-800">Periodos Fiscales</h2>
-      <p-button label="Nuevo Periodo" icon="pi pi-plus" (onClick)="displayModal = true"></p-button>
-    </div>
+<p-toast></p-toast>
+<p-confirmDialog [style]="{width:'480px'}"></p-confirmDialog>
 
-    <app-customtable
-      [genericCol]="cols"
-      [loaderFunction]="accountingService.getFiscalPeriods.bind(accountingService)"
-      [columnTemplates]="columnTemplates"
-      [actionsTemplate]="actionsTemplate"
-      titletable="Periodos">
-    </app-customtable>
-  </p-card>
+<div class="p-4 flex flex-col gap-5">
+
+    <!-- ── Encabezado ────────────────────────────────────── -->
+    <p-card>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                    <i class="pi pi-calendar text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-primary-900 m-0">Periodos Fiscales</h2>
+                    <p class="text-surface-500 text-sm m-0">
+                        Gestión de periodos contables mensuales
+                    </p>
+                </div>
+            </div>
+            <p-button label="Nuevo Periodo" icon="pi pi-plus" (onClick)="openModal()"></p-button>
+        </div>
+    </p-card>
+
+    <!-- ── Periodo actual destacado ──────────────────────── -->
+    @if (currentOpenPeriod) {
+        <div class="rounded-2xl border-2 border-green-300 bg-green-50 p-5
+                    flex items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center flex-shrink-0">
+                    <i class="pi pi-unlock text-white text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-green-600 uppercase tracking-wide m-0">
+                        Periodo Activo
+                    </p>
+                    <h3 class="text-2xl font-black text-green-900 m-0">
+                        {{monthName(currentOpenPeriod.month)}} {{currentOpenPeriod.year}}
+                    </h3>
+                    <div class="flex gap-4 mt-1 text-sm text-green-700">
+                        <span>
+                            <i class="pi pi-check-circle mr-1"></i>
+                            {{currentOpenPeriod.posted_count}} asentados
+                        </span>
+                        @if (currentOpenPeriod.draft_count > 0) {
+                            <span class="text-orange-600 font-semibold">
+                                <i class="pi pi-clock mr-1"></i>
+                                {{currentOpenPeriod.draft_count}} en borrador
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <p-button
+                label="Cerrar Periodo"
+                icon="pi pi-lock"
+                severity="warn"
+                [outlined]="true"
+                pTooltip="Cierra este periodo y abre el siguiente automáticamente"
+                (onClick)="confirmClose(currentOpenPeriod)">
+            </p-button>
+        </div>
+    }
+
+    <!-- ── Historial de periodos ──────────────────────────── -->
+    <p-card header="Historial de Periodos">
+
+        @if (isLoading()) {
+            <div class="flex justify-center py-10">
+                <i class="pi pi-spin pi-spinner text-3xl text-primary"></i>
+            </div>
+        } @else if (periods().length === 0) {
+            <div class="flex flex-col items-center py-12 gap-3 text-surface-400">
+                <i class="pi pi-calendar text-5xl"></i>
+                <p class="text-lg font-semibold m-0">No hay periodos registrados</p>
+                <p-button label="Crear Primer Periodo" icon="pi pi-plus" (onClick)="openModal()"></p-button>
+            </div>
+        } @else {
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                @for (period of periods(); track period.id) {
+                    <div class="rounded-xl border-2 overflow-hidden transition-shadow hover:shadow-md"
+                         [class]="period.status === 'OPEN'
+                            ? 'border-green-200 bg-white'
+                            : 'border-surface-200 bg-surface-50'">
+
+                        <!-- Cabecera de la tarjeta -->
+                        <div class="px-4 py-3 flex items-center justify-between border-b"
+                             [class]="period.status === 'OPEN'
+                                ? 'bg-green-50 border-green-100'
+                                : 'bg-surface-100 border-surface-200'">
+                            <div>
+                                <p class="font-black text-lg m-0"
+                                   [class]="period.status === 'OPEN' ? 'text-green-900' : 'text-surface-600'">
+                                    {{monthName(period.month)}}
+                                </p>
+                                <p class="text-sm m-0"
+                                   [class]="period.status === 'OPEN' ? 'text-green-700' : 'text-surface-500'">
+                                    {{period.year}}
+                                </p>
+                            </div>
+                            <p-tag
+                                [value]="period.status === 'OPEN' ? 'Abierto' : 'Cerrado'"
+                                [severity]="period.status === 'OPEN' ? 'success' : 'secondary'"
+                                [icon]="period.status === 'OPEN' ? 'pi pi-unlock' : 'pi pi-lock'">
+                            </p-tag>
+                        </div>
+
+                        <!-- Métricas de asientos -->
+                        <div class="px-4 py-3 flex flex-col gap-2">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="flex items-center gap-2 text-surface-600">
+                                    <i class="pi pi-check-circle text-green-500"></i>
+                                    Asentados
+                                </span>
+                                <span class="font-bold text-surface-800">
+                                    {{period.posted_count}}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="flex items-center gap-2"
+                                      [class]="period.draft_count > 0 ? 'text-orange-600' : 'text-surface-400'">
+                                    <i class="pi pi-clock"
+                                       [class]="period.draft_count > 0 ? 'text-orange-500' : 'text-surface-300'">
+                                    </i>
+                                    Borradores
+                                </span>
+                                <span class="font-bold"
+                                      [class]="period.draft_count > 0 ? 'text-orange-600' : 'text-surface-400'">
+                                    {{period.draft_count}}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Acción: cerrar (solo si está abierto y no es el destacado) -->
+                        @if (period.status === 'OPEN' && period.id !== currentOpenPeriod?.id) {
+                            <div class="px-4 pb-3">
+                                <p-button label="Cerrar" icon="pi pi-lock" size="small"
+                                          severity="secondary" [outlined]="true"
+                                          styleClass="w-full justify-center"
+                                          (onClick)="confirmClose(period)">
+                                </p-button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </p-card>
+
 </div>
 
-<ng-template #statusTemplate let-item>
-  <span [class]="'px-2 py-1 rounded text-xs font-bold ' + (item.status === 'OPEN' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')">
-    {{ item.status }}
-  </span>
-</ng-template>
+<!-- ── Diálogo crear periodo ──────────────────────────────── -->
+<p-dialog
+    [(visible)]="displayModal"
+    header="Nuevo Periodo Fiscal"
+    [modal]="true"
+    [style]="{width: '400px'}"
+    [draggable]="false">
 
-<ng-template #actionsTemplate let-item>
-  @if (item.status === 'OPEN') {
-    <p-button icon="pi pi-lock" severity="danger" text pTooltip="Cerrar Periodo" (onClick)="confirmClosePeriod(item.id)"></p-button>
-  }
-</ng-template>
+    <form [formGroup]="form" class="flex flex-col gap-5 pt-3">
 
-<p-dialog [(visible)]="displayModal" header="Nuevo Periodo" [modal]="true">
-  <form [formGroup]="form" class="p-4 flex flex-col gap-4">
-    <div class="flex flex-col">
-      <label>Año</label>
-      <p-inputNumber formControlName="year" [useGrouping]="false"></p-inputNumber>
-    </div>
-    <div class="flex flex-col">
-      <label>Mes</label>
-      <p-inputNumber formControlName="month" [min]="1" [max]="12"></p-inputNumber>
-    </div>
-    <p-button label="Guardar" (onClick)="createPeriod()"></p-button>
-  </form>
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-surface-600 uppercase">Mes *</label>
+            <p-select
+                [options]="MESES"
+                formControlName="month"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                class="w-full">
+            </p-select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-surface-600 uppercase">Año *</label>
+            <p-inputNumber
+                formControlName="year"
+                [useGrouping]="false"
+                [min]="2000"
+                [max]="2100"
+                placeholder="Ej: 2026"
+                styleClass="w-full">
+            </p-inputNumber>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex gap-2 text-sm text-blue-700">
+            <i class="pi pi-info-circle mt-0.5 flex-shrink-0"></i>
+            <span>El periodo se creará con estado <strong>Abierto</strong>. Solo puede existir un periodo
+            por mes/año.</span>
+        </div>
+
+    </form>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancelar" severity="secondary" [text]="true"
+                      (onClick)="displayModal = false">
+            </p-button>
+            <p-button label="Crear Periodo" icon="pi pi-plus"
+                      (onClick)="createPeriod()" [disabled]="form.invalid">
+            </p-button>
+        </div>
+    </ng-template>
 </p-dialog>
-<p-confirmDialog></p-confirmDialog>
-
-

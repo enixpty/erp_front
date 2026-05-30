@@ -12,6 +12,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
 import { environment } from '@src/environments/environment';
 import { SalesInvoiceService } from '@src/app/services/sales-invoice.service';
 import { ClientService } from '@src/app/services/client.service';
@@ -23,7 +24,7 @@ import { PaymentTypeService } from '@src/app/services/payment-type.service';
 @Component({
   selector: 'app-sales-invoice-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, DatePickerModule, Toast, RouterLink, ConfirmDialogModule],
+  imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, DatePickerModule, Toast, RouterLink, ConfirmDialogModule, TooltipModule],
   providers: [MessageService, ConfirmationService],
   templateUrl: './sales-invoice-form.html'
 })
@@ -74,10 +75,15 @@ export class SalesInvoiceFormComponent implements OnInit {
     );
   }
 
-  // Getter para visibilidad de customer_name
   get showCustomerName() {
     const client = this.clients.find(c => c.id === this.form.get('client')?.value);
     return client && client.payment_term === 'CASH';
+  }
+
+  get isCredit(): boolean {
+    const id = this.form.get('document_type')?.value;
+    const dt = this.documentTypes.find(d => d.id === id);
+    return dt?.payment_term === 'CREDIT';
   }
 
   clients: any[] = [];
@@ -90,9 +96,21 @@ export class SalesInvoiceFormComponent implements OnInit {
   get details() {
     return this.form.get('details') as FormArray;
   }
-  
+
   get payments() {
     return this.form.get('payments') as FormArray;
+  }
+
+  get paymentsSum(): number {
+    return this.payments.controls.reduce((acc, ctrl) => acc + (Number(ctrl.get('amount')?.value) || 0), 0);
+  }
+
+  get paymentPending(): number {
+    return (Number(this.form.get('total')?.value) || 0) - this.paymentsSum;
+  }
+
+  get isPaymentBalanced(): boolean {
+    return Math.abs(this.paymentPending) <= 0.01;
   }
 
   ngOnInit() {
@@ -118,11 +136,20 @@ export class SalesInvoiceFormComponent implements OnInit {
       
       const docType = this.documentTypes.find(d => d.id === val);
       if (docType && docType.payment_term === 'CASH') {
-          if (this.payments.length === 0) {
-              this.addPayment();
-          }
+        if (this.payments.length === 0) this.addPayment();
+        // CONTADO: vence hoy
+        this.form.get('due_date')?.setValue(new Date());
+        this.form.get('due_date')?.disable();
       } else {
-          this.payments.clear();
+        this.payments.clear();
+        // CRÉDITO: vence según días de crédito del cliente
+        const clientId = this.form.get('client')?.value;
+        const client = this.clients.find(c => c.id === clientId);
+        const creditDays = client?.credit_days || 30;
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + creditDays);
+        this.form.get('due_date')?.setValue(dueDate);
+        this.form.get('due_date')?.enable();
       }
     });
   }
@@ -208,41 +235,37 @@ export class SalesInvoiceFormComponent implements OnInit {
     const price = detail.get('price')?.value || 0;
     const disc = detail.get('discount')?.value || 0;
     const subtotal = (qty * price) - disc;
-    
+
     const isExempt = detail.get('tax_exempt')?.value;
     const taxPercent = isExempt ? 0 : (detail.get('tax_percent')?.value || 0);
-    const tax = subtotal * (taxPercent / 100);
-    
+    // ITBMS redondeado a 2 decimales por renglón (estándar fiscal Panamá)
+    const tax = Math.round(subtotal * (taxPercent / 100) * 100) / 100;
+
     detail.patchValue({ subtotal, tax }, { emitEvent: false });
     this.calculateTotals();
   }
 
   calculateTotals() {
     let subtotal = 0;
-    let totalTaxBeforeDiscount = 0;
-    let globalTaxDiscount = 0;
+    let totalTax = 0;
+    const globalDiscountPercent = this.form.get('global_discount')?.value || 0;
 
+    // Sumar ITBMS ya redondeado por renglón, no recalcular
     this.details.controls.forEach(control => {
-      const rowSubtotal = control.get('subtotal')?.value || 0;
-      subtotal += rowSubtotal;
-      
-      const taxPercent = control.get('tax_exempt')?.value ? 0 : (control.get('tax_percent')?.value || 0);
-      const rowTax = rowSubtotal * (taxPercent / 100);
-      totalTaxBeforeDiscount += rowTax;
+      subtotal += control.get('subtotal')?.value || 0;
+      totalTax += control.get('tax')?.value || 0;
     });
 
-    const globalDiscountPercent = this.form.get('global_discount')?.value || 0;
     const discountAmount = subtotal * (globalDiscountPercent / 100);
-    globalTaxDiscount = totalTaxBeforeDiscount * (globalDiscountPercent / 100);
-    
-    const tax = totalTaxBeforeDiscount - globalTaxDiscount;
-    const total = (subtotal - discountAmount) + tax;
-    
+    const taxDiscount = Math.round(totalTax * (globalDiscountPercent / 100) * 100) / 100;
+    const tax = Math.round((totalTax - taxDiscount) * 100) / 100;
+    const total = Math.round(((subtotal - discountAmount) + tax) * 100) / 100;
+
     this.form.patchValue({ subtotal, tax, total }, { emitEvent: false });
-    
+
     // Auto-completar el monto en los pagos si es CASH y hay un solo pago
     if (this.payments.length === 1) {
-        this.payments.at(0).get('amount')?.setValue(total);
+      this.payments.at(0).get('amount')?.setValue(total);
     }
   }
 

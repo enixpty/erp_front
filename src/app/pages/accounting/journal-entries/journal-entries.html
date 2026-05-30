@@ -1,35 +1,78 @@
-<div class="p-4">
-  <p-card>
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold text-surface-800">Asientos Contables</h2>
-      <p-button label="Nuevo Asiento" icon="pi pi-plus" [routerLink]="['/accounting/entries/new']"></p-button>
-    </div>
+<p-toast></p-toast>
 
-    <app-customtable
-      [genericCol]="cols"
-      [loaderFunction]="accountingService.getJournalEntries.bind(accountingService)"
-      [actionsTemplate]="actions"
-      [columnTemplates]="columnTemplates"
-      titletable="Libro Diario">
-    </app-customtable>
-  </p-card>
+<div class="p-4 flex flex-col gap-4">
+
+    <!-- Filtros -->
+    <p-card>
+        <div class="flex flex-wrap gap-3 items-end">
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-surface-600 uppercase">Desde</label>
+                <p-datePicker [(ngModel)]="filterStart" [showIcon]="true"
+                    appendTo="body" placeholder="Fecha inicio" styleClass="w-36">
+                </p-datePicker>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-surface-600 uppercase">Hasta</label>
+                <p-datePicker [(ngModel)]="filterEnd" [showIcon]="true"
+                    appendTo="body" placeholder="Fecha fin" styleClass="w-36">
+                </p-datePicker>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-surface-600 uppercase">Referencia</label>
+                <input pInputText [(ngModel)]="filterRef"
+                       placeholder="Ej: FAC-00001" class="w-40" />
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-surface-600 uppercase">Estado</label>
+                <p-select [options]="statusOptions" [(ngModel)]="filterStatus"
+                          optionLabel="label" optionValue="value"
+                          appendTo="body" styleClass="w-36">
+                </p-select>
+            </div>
+            <p-button label="Buscar" icon="pi pi-search" (onClick)="applyFilters()"></p-button>
+            <p-button label="Limpiar" icon="pi pi-times" severity="secondary"
+                      [outlined]="true" (onClick)="clearFilters()">
+            </p-button>
+            <div class="ml-auto">
+                <p-button label="Nuevo Asiento Manual" icon="pi pi-plus"
+                          [routerLink]="['/accounting/entries/new']">
+                </p-button>
+            </div>
+        </div>
+    </p-card>
+
+    <!-- Tabla -->
+    <p-card header="Libro Diario">
+        <app-customtable
+            [genericCol]="cols"
+            [loaderFunction]="loaderFunction"
+            [actionsTemplate]="actions"
+            [columnTemplates]="columnTemplates">
+        </app-customtable>
+    </p-card>
+
 </div>
 
 <ng-template #statusTemplate let-item>
-  <span [class]="'px-2 py-1 rounded text-xs font-bold ' + 
-    (item.status === 'POSTED' ? 'bg-green-100 text-green-700' : 
-     item.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')">
-    {{ item.status }}
-  </span>
+    <span class="px-2 py-1 rounded-full text-xs font-bold"
+          [class]="item.status === 'POSTED'    ? 'bg-green-100 text-green-700' :
+                   item.status === 'DRAFT'     ? 'bg-yellow-100 text-yellow-700' :
+                                                 'bg-red-100 text-red-700'">
+        {{ item.status === 'POSTED' ? 'Asentado' : item.status === 'DRAFT' ? 'Borrador' : 'Anulado' }}
+    </span>
 </ng-template>
 
 <ng-template #actions let-item>
-  <div class="flex gap-2">
-    <p-button icon="pi pi-eye" [text]="true" pTooltip="Ver Detalle" [routerLink]="['/accounting/entries', item.id]"></p-button>
-    @if (item.status === 'DRAFT') {
-      <p-button icon="pi pi-check-circle" [text]="true" severity="success" pTooltip="Asentar Asiento" (onClick)="postEntry(item.id)"></p-button>
-    }
-  </div>
+    <div class="flex gap-2">
+        <p-button icon="pi pi-eye" [text]="true"
+                  pTooltip="Ver Detalle"
+                  [routerLink]="['/accounting/entries', item.id]">
+        </p-button>
+        @if (item.status === 'DRAFT') {
+            <p-button icon="pi pi-check-circle" [text]="true" severity="success"
+                      pTooltip="Asentar Asiento"
+                      (onClick)="postEntry(item.id)">
+            </p-button>
+        }
+    </div>
 </ng-template>
-
-

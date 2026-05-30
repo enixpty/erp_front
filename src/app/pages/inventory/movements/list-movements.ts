@@ -1,21 +1,26 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { Customtable } from '@src/app/components/customTable/customtable';
 import { StockMovementService } from '@src/app/services/stock-movement.service';
 import { TagModule } from 'primeng/tag';
-import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-list-movements',
   standalone: true,
-  imports: [CommonModule, CardModule, Customtable, TagModule],
+  imports: [CommonModule, CardModule, ButtonModule, ToastModule, Customtable, TagModule],
+  providers: [MessageService],
   templateUrl: './list-movements.html'
 })
 export class ListMovementsComponent implements OnInit {
   private movementService = inject(StockMovementService);
+  private msg = inject(MessageService);
 
   movements = signal<any[]>([]);
+  isExporting = signal<boolean>(false);
 
   cols = [
     { field: 'created', header: 'Fecha', filter: true },
@@ -45,6 +50,26 @@ export class ListMovementsComponent implements OnInit {
       case 'TRANSFER': return 'info';
       default: return 'secondary';
     }
+  }
+
+  exportExcel() {
+    this.isExporting.set(true);
+    this.movementService.exportExcel().subscribe({
+      next: (blob) => { this.downloadBlob(blob, 'Movimientos_Inventario.xlsx'); this.isExporting.set(false); },
+      error: () => {
+        this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se pudo exportar.' });
+        this.isExporting.set(false);
+      }
+    });
+  }
+
+  private downloadBlob(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 }
 

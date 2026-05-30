@@ -1,4 +1,6 @@
 <div class="p-6 bg-surface-50 min-h-screen">
+
+    <!-- ── Encabezado ────────────────────────────────────────── -->
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-4">
             <div class="p-3 bg-white rounded-xl shadow-sm border border-surface-200">
@@ -11,11 +13,27 @@
         </div>
     </div>
 
+    <!-- ── Tabla con filtros nativos por columna ─────────────── -->
     <div class="bg-white p-2 rounded-2xl border border-surface-200 shadow-sm">
-        <app-customtable 
+        <app-customtable
             titletable="Historial de Movimientos"
             [loaderFunction]="auditService.getLogs.bind(auditService)"
-            [genericCol]="cols">
+            [genericCol]="cols"
+            [columnTemplates]="columnTemplates">
         </app-customtable>
     </div>
 </div>
+
+<!-- ── Templates de columna ──────────────────────────────────── -->
+<ng-template #opTemplate let-item>
+    <p-tag [value]="opLabel(item.operation_type)"
+           [severity]="opSeverity(item.operation_type)"
+           styleClass="text-xs">
+    </p-tag>
+</ng-template>
+
+<ng-template #dateTemplate let-item>
+    <span class="text-sm text-surface-700 whitespace-nowrap">
+        {{ item.timestamp | date:'dd/MM/yyyy HH:mm' }}
+    </span>
+</ng-template>

@@ -1,0 +1,140 @@
+<div class="p-4 flex flex-col gap-5">
+
+    <!-- ── Encabezado y filtros ──────────────────────────────── -->
+    <p-card>
+        <div class="flex flex-col lg:flex-row lg:items-end gap-4">
+            <div class="flex items-center gap-4 flex-1">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                    <i class="pi pi-calculator text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-primary-900 m-0">Balance de Comprobación</h2>
+                    <p class="text-surface-500 text-sm m-0">Sumas y saldos por cuenta — solo asientos asentados</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3 items-end">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-surface-600 uppercase">Desde</label>
+                    <p-datePicker [(ngModel)]="startDate" [showIcon]="true" appendTo="body"
+                                  dateFormat="dd/mm/yy" styleClass="w-36"></p-datePicker>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-surface-600 uppercase">Hasta</label>
+                    <p-datePicker [(ngModel)]="endDate" [showIcon]="true" appendTo="body"
+                                  dateFormat="dd/mm/yy" styleClass="w-36"></p-datePicker>
+                </div>
+                <p-button label="Aplicar" icon="pi pi-search" (onClick)="loadReport()" [loading]="isLoading()"></p-button>
+                <p-button label="Excel" icon="pi pi-file-excel" severity="success" [outlined]="true"
+                          (onClick)="exportExcel()" [loading]="isExporting()" [disabled]="!data()"></p-button>
+            </div>
+        </div>
+    </p-card>
+
+    @if (isLoading()) {
+        <div class="flex justify-center py-16">
+            <i class="pi pi-spin pi-spinner text-3xl text-primary"></i>
+        </div>
+    }
+
+    @if (!isLoading() && data(); as d) {
+
+        <!-- ── Indicador de cuadre ───────────────────────────── -->
+        <div class="rounded-2xl border-2 p-4 flex flex-wrap items-center gap-6"
+             [class]="d.is_balance_squared ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'">
+            <div class="flex items-center gap-3">
+                <i class="pi text-2xl"
+                   [class]="d.is_balance_squared ? 'pi-check-circle text-green-600' : 'pi-times-circle text-red-600'"></i>
+                <div>
+                    <p class="font-bold m-0"
+                       [class]="d.is_balance_squared ? 'text-green-800' : 'text-red-800'">
+                        {{ d.is_balance_squared ? 'Balance Cuadrado' : 'Balance Descuadrado' }}
+                    </p>
+                    <p class="text-xs m-0"
+                       [class]="d.is_balance_squared ? 'text-green-600' : 'text-red-600'">
+                        {{ d.is_balance_squared ? 'Total Deudor = Total Acreedor' : 'Revise los asientos: las sumas no coinciden' }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex-1"></div>
+
+            <div class="flex gap-8">
+                <div class="text-right">
+                    <p class="text-xs font-bold text-surface-500 uppercase m-0">Total Deudor</p>
+                    <p class="text-xl font-black text-blue-700 m-0">{{ d.total_debit_balance | currency:'':'symbol':'1.2-2' }}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs font-bold text-surface-500 uppercase m-0">Total Acreedor</p>
+                    <p class="text-xl font-black text-purple-700 m-0">{{ d.total_credit_balance | currency:'':'symbol':'1.2-2' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Tabla ─────────────────────────────────────────── -->
+        <p-card>
+            <!-- Filtros locales -->
+            <div class="flex flex-wrap gap-3 mb-4">
+                <div class="flex items-center gap-2 flex-1 min-w-48 border border-surface-300 rounded-lg px-3 bg-white
+                            focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                    <i class="pi pi-search text-surface-400"></i>
+                    <input pInputText [(ngModel)]="filterText" placeholder="Buscar por código o nombre..."
+                           class="flex-1 border-0 shadow-none focus:ring-0 py-2 bg-transparent" />
+                </div>
+                <p-select [options]="typeOptions" [(ngModel)]="typeFilter"
+                          optionLabel="label" optionValue="value"
+                          appendTo="body" styleClass="w-48"></p-select>
+            </div>
+
+            <p-table [value]="filteredAccounts" styleClass="p-datatable-sm p-datatable-striped"
+                     [scrollable]="true" scrollHeight="55vh" [showGridlines]="true">
+                <ng-template pTemplate="header">
+                    <tr class="bg-primary-50 text-primary-900 uppercase text-xs">
+                        <th class="p-3 w-28">Código</th>
+                        <th class="p-3">Cuenta</th>
+                        <th class="p-3 w-24 text-center">Tipo</th>
+                        <th class="p-3 w-32 text-right">Mov. Débito</th>
+                        <th class="p-3 w-32 text-right">Mov. Crédito</th>
+                        <th class="p-3 w-32 text-right">Saldo Deudor</th>
+                        <th class="p-3 w-32 text-right">Saldo Acreedor</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-acc>
+                    <tr class="hover:bg-blue-50/30">
+                        <td class="p-2 font-mono text-xs text-primary-700">{{ acc.code }}</td>
+                        <td class="p-2 text-sm text-surface-800">{{ acc.name }}</td>
+                        <td class="p-2 text-center">
+                            <p-tag [value]="acc.type_label" [severity]="typeSeverity(acc.account_type)" styleClass="text-xs"></p-tag>
+                        </td>
+                        <td class="p-2 text-right text-sm text-surface-600">
+                            @if (acc.debit) { {{ acc.debit | currency:'':'symbol':'1.2-2' }} }
+                        </td>
+                        <td class="p-2 text-right text-sm text-surface-600">
+                            @if (acc.credit) { {{ acc.credit | currency:'':'symbol':'1.2-2' }} }
+                        </td>
+                        <td class="p-2 text-right font-semibold text-blue-700">
+                            @if (acc.debit_balance) { {{ acc.debit_balance | currency:'':'symbol':'1.2-2' }} }
+                        </td>
+                        <td class="p-2 text-right font-semibold text-purple-700">
+                            @if (acc.credit_balance) { {{ acc.credit_balance | currency:'':'symbol':'1.2-2' }} }
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="footer">
+                    <tr class="font-bold bg-surface-100 border-t-2 border-surface-400">
+                        <td colspan="3" class="p-3 text-right uppercase text-sm text-surface-700">Totales</td>
+                        <td class="p-3 text-right text-surface-700">{{ d.total_debit | currency:'':'symbol':'1.2-2' }}</td>
+                        <td class="p-3 text-right text-surface-700">{{ d.total_credit | currency:'':'symbol':'1.2-2' }}</td>
+                        <td class="p-3 text-right text-blue-800 text-base">{{ d.total_debit_balance | currency:'':'symbol':'1.2-2' }}</td>
+                        <td class="p-3 text-right text-purple-800 text-base">{{ d.total_credit_balance | currency:'':'symbol':'1.2-2' }}</td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr><td colspan="7" class="text-center text-surface-400 py-8">
+                        No hay movimientos en el periodo seleccionado.
+                    </td></tr>
+                </ng-template>
+            </p-table>
+        </p-card>
+    }
+
+</div>

@@ -1,4 +1,5 @@
 @if (order) {
+<p-toast></p-toast>
 <p-confirmDialog></p-confirmDialog>
 
 <div class="p-6 bg-surface-100 min-h-screen">
@@ -9,11 +10,11 @@
         <p-button label="Regresar" icon="pi pi-arrow-left" [routerLink]="['/sales/sales-orders']" severity="secondary"></p-button>
         @if (order.status !== 'CANCELLED' && order.status !== 'INVOICED') {
             <p-button label="Anular Pedido" icon="pi pi-times" severity="danger" (onClick)="cancelOrder()"></p-button>
-            <p-button label="Generar Factura" icon="pi pi-file-invoice" severity="success" (onClick)="generateInvoice()"></p-button>
+            <p-button label="Generar Factura" icon="pi pi-file-invoice" severity="success" (onClick)="openInvoiceDialog()"></p-button>
         }
       </div>
     </div>
-    
+
     <div class="grid grid-cols-3 gap-4 mb-6">
       <div class="bg-surface-50 p-4 rounded-lg">
         <label class="text-xs font-bold text-surface-500 uppercase">Cliente</label>
@@ -63,3 +64,123 @@
   </p-card>
 </div>
 }
+
+<!-- Dialog: Generar Factura -->
+<p-dialog
+  header="Generar Factura"
+  [visible]="showInvoiceDialog()"
+  (visibleChange)="showInvoiceDialog.set($event)"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [closable]="true"
+  [draggable]="false">
+
+  <form [formGroup]="invoiceDialogForm" class="flex flex-col gap-5 pt-2">
+
+    <!-- Tipo de cliente (informativo) -->
+    @if (order?.client_payment_term) {
+      <div class="flex items-center gap-2 p-3 rounded-lg border"
+           [class]="order.client_payment_term === 'CASH' ? 'bg-blue-50 border-blue-200' : 'bg-purple-50 border-purple-200'">
+        <i class="pi" [class]="order.client_payment_term === 'CASH' ? 'pi-wallet text-blue-600' : 'pi-credit-card text-purple-600'"></i>
+        <span class="text-sm font-semibold"
+              [class]="order.client_payment_term === 'CASH' ? 'text-blue-700' : 'text-purple-700'">
+          Cliente de {{ order.client_payment_term === 'CASH' ? 'CONTADO' : 'CRÉDITO' }}
+          — solo se muestran documentos compatibles
+        </span>
+      </div>
+    }
+
+    <!-- Tipo de Documento -->
+    <div class="flex flex-col gap-2">
+      <label class="text-xs font-bold text-surface-600 uppercase">Tipo de Documento</label>
+      <p-select
+        [options]="filteredDocumentTypes"
+        formControlName="document_type"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Seleccione tipo de documento"
+        appendTo="body"
+        class="w-full"
+        (onChange)="onDocTypeChange($event.value)">
+      </p-select>
+      @if (invoiceDialogForm.get('document_type')?.invalid && invoiceDialogForm.get('document_type')?.touched) {
+        <small class="text-red-500">El tipo de documento es requerido.</small>
+      }
+      @if (filteredDocumentTypes.length === 0 && documentTypes.length > 0) {
+        <small class="text-orange-600">No hay tipos de documento configurados para este cliente. Verifique la configuración.</small>
+      }
+    </div>
+
+    <!-- Sección de Pagos (solo si es CASH) -->
+    @if (selectedDocType && selectedDocType.payment_term === 'CASH') {
+      <div class="border border-surface-200 rounded-xl p-4 bg-white shadow-sm">
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="font-bold text-primary-800 m-0">
+            <i class="pi pi-wallet mr-2"></i>Formas de Pago
+          </h4>
+          <p-button label="Agregar" icon="pi pi-plus" size="small" [text]="true" (click)="addPayment()"></p-button>
+        </div>
+
+        <div formArrayName="payments" class="flex flex-col gap-3">
+          @for (payment of invoicePayments.controls; track $index) {
+            <div [formGroupName]="$index" class="flex gap-3 items-center">
+              <p-select
+                [options]="paymentTypes"
+                formControlName="payment_type"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Tipo de Pago"
+                class="flex-1"
+                appendTo="body">
+              </p-select>
+              <input
+                pInputText
+                type="number"
+                formControlName="amount"
+                placeholder="Monto"
+                class="w-28 text-right" />
+              <input
+                pInputText
+                formControlName="reference"
+                placeholder="Referencia (Ej: Yappy #)"
+                class="w-40" />
+              <p-button
+                icon="pi pi-times"
+                severity="danger"
+                [text]="true"
+                (click)="removePayment($index)"
+                [disabled]="invoicePayments.length === 1">
+              </p-button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Resumen Total -->
+    @if (order) {
+      <div class="bg-surface-50 rounded-lg p-4 flex justify-between items-center border border-surface-200">
+        <span class="font-bold text-surface-700">Total del Pedido:</span>
+        <span class="text-xl font-black text-primary-600">{{order.total | currency}}</span>
+      </div>
+    }
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-3">
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="showInvoiceDialog.set(false)">
+      </p-button>
+      <p-button
+        label="Facturar"
+        icon="pi pi-check"
+        severity="success"
+        (onClick)="confirmInvoice()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

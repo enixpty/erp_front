@@ -68,6 +68,10 @@ export class AccountingService {
   }
 
   // Mappings
+  getHealthCheck(): Observable<any> {
+    return this.http.get<any>(`${this.url}/mappings/health_check/`);
+  }
+
   getMappings(params?: any): Observable<any> {
     return this.http.get<any>(`${this.url}/mappings/`, { params });
   }
@@ -86,6 +90,18 @@ export class AccountingService {
 
   deleteMapping(id: any): Observable<any> {
     return this.http.delete(`${this.url}/mappings/${id}/`);
+  }
+
+  exportExcel(params: any): Observable<Blob> {
+    return this.http.get(`${this.url}/reports/export_excel/`, { params, responseType: 'blob' });
+  }
+
+  getTrialBalance(params: any): Observable<any> {
+    return this.http.get(`${this.url}/reports/trial_balance/`, { params });
+  }
+
+  exportTrialBalanceExcel(params: any): Observable<Blob> {
+    return this.http.get(`${this.url}/reports/trial_balance_excel/`, { params, responseType: 'blob' });
   }
 
   validateSetup(category: string, docTypeId?: any): Observable<any> {

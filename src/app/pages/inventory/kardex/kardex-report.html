@@ -1,59 +1,165 @@
-<div class="p-6 bg-surface-50 min-h-screen">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-surface-900 m-0">Kardex de Inventario</h1>
+<p-toast></p-toast>
+
+<div class="p-4 lg:p-6 bg-surface-50 min-h-screen">
+
+    <!-- ── Encabezado ────────────────────────────────────────── -->
+    <div class="flex items-center gap-4 mb-6">
+        <div class="w-11 h-11 rounded-xl bg-primary flex items-center justify-center">
+            <i class="pi pi-history text-white text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-2xl font-bold text-surface-900 m-0">Kardex de Inventario</h1>
+            <p class="text-surface-500 text-sm m-0">Historial de movimientos de un producto por bodega</p>
+        </div>
     </div>
 
-    <div class="bg-white p-6 rounded-xl border border-surface-200 shadow-sm mb-6 flex gap-4 flex-wrap items-end">
-        <div class="flex flex-col gap-2 flex-1">
-            <label class="text-sm font-semibold">Producto (SKU)</label>
-            <p-select [options]="skus" [(ngModel)]="filters.sku" optionLabel="name" optionValue="id" [filter]="true" placeholder="Seleccionar producto..." class="w-full"></p-select>
-        </div>
-        <div class="flex flex-col gap-2 flex-1">
-            <label class="text-sm font-semibold">Bodega</label>
-            <p-select [options]="warehouses" [(ngModel)]="filters.warehouse" optionLabel="name" optionValue="id" placeholder="Seleccionar bodega..." class="w-full"></p-select>
-        </div>
-        <div class="flex flex-col gap-2 w-40">
-            <label class="text-sm font-semibold">Inicio</label>
-            <p-datepicker [(ngModel)]="filters.start_date" [showIcon]="true" class="w-full"></p-datepicker>
-        </div>
-        <div class="flex flex-col gap-2 w-40">
-            <label class="text-sm font-semibold">Fin</label>
-            <p-datepicker [(ngModel)]="filters.end_date" [showIcon]="true" class="w-full"></p-datepicker>
-        </div>
-        <p-button label="Consultar" icon="pi pi-filter" (onClick)="loadReport()" severity="primary"></p-button>
-    </div>
-
-    <div *ngIf="report" class="bg-white p-6 rounded-xl border border-surface-200 shadow-sm">
-        <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="bg-surface-100 p-4 rounded-lg">
-                <p class="text-xs uppercase text-surface-500">Saldo Inicial</p>
-                <h3 class="text-xl font-bold">{{report.initial_stock}}</h3>
+    <!-- ── Filtros ───────────────────────────────────────────── -->
+    <div class="bg-white p-5 rounded-2xl border border-surface-200 shadow-sm mb-6">
+        <div class="flex gap-4 flex-wrap items-end">
+            <div class="flex flex-col gap-2 flex-1 min-w-64">
+                <label class="text-xs font-bold text-surface-600 uppercase">Producto (SKU)</label>
+                <p-select [options]="skus" [(ngModel)]="filters.sku"
+                          optionLabel="searchLabel" optionValue="id"
+                          [filter]="true" filterBy="searchLabel"
+                          placeholder="Buscar producto por código o nombre..."
+                          appendTo="body" class="w-full">
+                </p-select>
             </div>
-            <div class="bg-surface-100 p-4 rounded-lg">
-                <p class="text-xs uppercase text-surface-500">Saldo Final</p>
-                <h3 class="text-xl font-bold">{{report.final_stock}}</h3>
+            <div class="flex flex-col gap-2 flex-1 min-w-48">
+                <label class="text-xs font-bold text-surface-600 uppercase">Bodega</label>
+                <p-select [options]="warehouses" [(ngModel)]="filters.warehouse"
+                          optionLabel="name" optionValue="id"
+                          placeholder="Seleccionar bodega..."
+                          appendTo="body" class="w-full">
+                </p-select>
+            </div>
+            <div class="flex flex-col gap-2 w-40">
+                <label class="text-xs font-bold text-surface-600 uppercase">Inicio</label>
+                <p-datepicker [(ngModel)]="filters.start_date" [showIcon]="true"
+                              dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full">
+                </p-datepicker>
+            </div>
+            <div class="flex flex-col gap-2 w-40">
+                <label class="text-xs font-bold text-surface-600 uppercase">Fin</label>
+                <p-datepicker [(ngModel)]="filters.end_date" [showIcon]="true"
+                              dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full">
+                </p-datepicker>
+            </div>
+            <p-button label="Consultar" icon="pi pi-search"
+                      (onClick)="loadReport()" severity="primary" [loading]="isLoading()">
+            </p-button>
+        </div>
+    </div>
+
+    @if (isLoading()) {
+        <div class="flex justify-center py-16">
+            <i class="pi pi-spin pi-spinner text-3xl text-primary"></i>
+        </div>
+    }
+
+    @if (!isLoading() && report(); as r) {
+
+        <!-- Cabecera del producto consultado -->
+        <div class="bg-white rounded-2xl border border-surface-200 shadow-sm px-5 py-3 mb-4 flex items-center gap-3 flex-wrap">
+            <i class="pi pi-box text-primary"></i>
+            <span class="font-bold text-surface-800">{{ selectedSkuLabel }}</span>
+            <span class="text-surface-300">|</span>
+            <i class="pi pi-warehouse text-surface-400"></i>
+            <span class="text-surface-600">{{ selectedWarehouseLabel }}</span>
+            <p-button label="Exportar Excel" icon="pi pi-file-excel" severity="success"
+                      [outlined]="true" size="small" styleClass="ml-auto"
+                      (onClick)="exportExcel()" [loading]="isExporting()">
+            </p-button>
+        </div>
+
+        <!-- ── Tarjetas de resumen ───────────────────────────── -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-2xl border border-surface-200 shadow-sm">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="pi pi-flag text-surface-400"></i>
+                    <p class="text-xs uppercase text-surface-500 font-semibold m-0">Saldo Inicial</p>
+                </div>
+                <h3 class="text-2xl font-black text-surface-800 m-0">{{ r.initial_stock | number:'1.0-2' }}</h3>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-green-100 shadow-sm">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="pi pi-arrow-down text-green-500"></i>
+                    <p class="text-xs uppercase text-surface-500 font-semibold m-0">Entradas</p>
+                </div>
+                <h3 class="text-2xl font-black text-green-600 m-0">+{{ totalEntradas | number:'1.0-2' }}</h3>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-red-100 shadow-sm">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="pi pi-arrow-up text-red-500"></i>
+                    <p class="text-xs uppercase text-surface-500 font-semibold m-0">Salidas</p>
+                </div>
+                <h3 class="text-2xl font-black text-red-600 m-0">-{{ totalSalidas | number:'1.0-2' }}</h3>
+            </div>
+
+            <div class="bg-gradient-to-br from-primary-600 to-primary-700 text-white p-4 rounded-2xl shadow-md">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="pi pi-check-circle opacity-80"></i>
+                    <p class="text-xs uppercase opacity-80 font-semibold m-0">Saldo Final</p>
+                </div>
+                <h3 class="text-2xl font-black m-0">{{ r.final_stock | number:'1.0-2' }}</h3>
             </div>
         </div>
 
-        <p-table [value]="report.movements" [paginator]="true" [rows]="10">
-            <ng-template pTemplate="header">
-                <tr>
-                    <th>Fecha</th>
-                    <th>Tipo</th>
-                    <th>Documento</th>
-                    <th>Cantidad</th>
-                    <th>Saldo</th>
-                </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-mov>
-                <tr>
-                    <td>{{mov.date}}</td>
-                    <td><span [ngClass]="mov.type === 'ENTRADA' ? 'text-green-600' : 'text-red-600'" class="font-bold">{{mov.type}}</span></td>
-                    <td>{{mov.doc}}</td>
-                    <td>{{mov.qty}}</td>
-                    <td>{{mov.balance}}</td>
-                </tr>
-            </ng-template>
-        </p-table>
-    </div>
+        <!-- ── Tabla de movimientos ──────────────────────────── -->
+        <div class="bg-white p-4 rounded-2xl border border-surface-200 shadow-sm">
+            <div class="flex items-center justify-between mb-3 px-1">
+                <h3 class="font-bold text-surface-800 m-0">Detalle de Movimientos</h3>
+                <span class="text-sm text-surface-400">{{ movementCount }} movimiento(s)</span>
+            </div>
+
+            <p-table [value]="r.movements" [paginator]="r.movements.length > 15" [rows]="15"
+                     styleClass="p-datatable-sm p-datatable-striped" [showGridlines]="true">
+                <ng-template pTemplate="header">
+                    <tr class="bg-primary-50 text-primary-900 uppercase text-xs">
+                        <th class="p-3">Fecha</th>
+                        <th class="p-3 text-center">Tipo</th>
+                        <th class="p-3">Documento</th>
+                        <th class="p-3 text-right">Cantidad</th>
+                        <th class="p-3 text-right">Saldo</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-mov>
+                    <tr class="hover:bg-blue-50/30">
+                        <td class="p-3 text-sm text-surface-700 whitespace-nowrap">{{ mov.date }}</td>
+                        <td class="p-3 text-center">
+                            @if (mov.type === 'ENTRADA') {
+                                <p-tag value="Entrada" severity="success" icon="pi pi-arrow-down" styleClass="text-xs"></p-tag>
+                            } @else {
+                                <p-tag value="Salida" severity="danger" icon="pi pi-arrow-up" styleClass="text-xs"></p-tag>
+                            }
+                        </td>
+                        <td class="p-3 text-sm font-mono text-surface-600">{{ mov.doc || '—' }}</td>
+                        <td class="p-3 text-right font-semibold"
+                            [class]="mov.type === 'ENTRADA' ? 'text-green-600' : 'text-red-600'">
+                            {{ mov.type === 'ENTRADA' ? '+' : '-' }}{{ mov.qty | number:'1.0-2' }}
+                        </td>
+                        <td class="p-3 text-right font-bold text-surface-800">{{ mov.balance | number:'1.0-2' }}</td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="5" class="text-center text-surface-400 py-10">
+                            <i class="pi pi-inbox text-3xl block mb-2"></i>
+                            No hubo movimientos en el periodo seleccionado.
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    }
+
+    @if (!isLoading() && !report()) {
+        <div class="flex flex-col items-center justify-center py-20 gap-3 text-surface-400">
+            <i class="pi pi-history text-5xl"></i>
+            <p class="text-lg font-semibold m-0">Seleccione los filtros y presione "Consultar"</p>
+            <p class="text-sm m-0">Verá el historial de entradas y salidas del producto.</p>
+        </div>
+    }
 </div>

@@ -12,6 +12,10 @@ export class StockMovementService {
     return this.http.get<any>(this.url, { params });
   }
 
+  exportExcel(): Observable<Blob> {
+    return this.http.get(`${this.url}export_excel/`, { responseType: 'blob' });
+  }
+
   createStockMovement(data: any): Observable<any> {
     return this.http.post<any>(this.url, data);
   }

@@ -10,8 +10,12 @@
                 <p class="text-surface-500 m-0 text-sm">Registro histórico de entradas, salidas y transferencias.</p>
             </div>
         </div>
+        <p-button label="Exportar Excel" icon="pi pi-file-excel" severity="success"
+                  [outlined]="true" (onClick)="exportExcel()" [loading]="isExporting()">
+        </p-button>
     </div>
   </p-card>
+  <p-toast></p-toast>
 
   <p-card styleClass="shadow-lg rounded-2xl border-none">
     <app-customtable

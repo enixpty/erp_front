@@ -1,83 +1,210 @@
+<p-toast></p-toast>
 
+<div class="p-4 lg:p-6">
+    <p-card>
+        <!-- ── Encabezado ────────────────────────────────────── -->
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-4 px-6 py-4 border-b border-surface-200 bg-surface-50">
+                <div class="w-11 h-11 rounded-xl bg-primary flex items-center justify-center">
+                    <i class="pi pi-sitemap text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-primary-900 m-0">Crear Nuevo Menú</h2>
+                    <p class="text-surface-500 text-sm m-0">Configure una entrada del menú de navegación</p>
+                </div>
+            </div>
+        </ng-template>
 
-<div class="w-auto pt-2 pl-2 pr-2 h-90">    
-    <p-card header="Crear Nuevo Menú"  [ngClass]="['mx-auto', 'w-[60%]']" >
-        <div class="grid grid-cols-4 gap-4">    
-            <div class="col-span-4 pt-2"> 
-                <label for="name" class="font-semibold w-24">Nombre</label>
-                <input pInputText id="name" class="flex-auto w-full"  
-                        [(ngModel)]="newMenu().name"
-                        autocomplete="off" />
-                @if (isNameRequired()) {
-                    <p-message severity="error" size="small" 
-                        variant="simple">El Nombre es requerido</p-message>
-                }
-            </div>
-            
-            <div class="col-span-4 pt-2"> 
-                <label for="path" class="font-semibold w-24">Path</label>
-                <input pInputText id="path" class="flex-auto w-full"  
-                        [(ngModel)]="newMenu().path"
-                        autocomplete="off" placeholder="/ruta/ejemplo (opcional)" />
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-2">
+
+            <!-- ════════ Columna formulario ════════ -->
+            <div class="lg:col-span-2 flex flex-col gap-5">
+
+                <!-- Nombre -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs font-bold text-surface-600 uppercase">Nombre del Menú *</label>
+                    <input pInputText class="w-full"
+                           [ngModel]="newMenu().name"
+                           (ngModelChange)="patch('name', $event)"
+                           placeholder="Ej: Facturación, Inventario..."
+                           autocomplete="off" />
+                    @if (isNameRequired()) {
+                        <small class="text-red-500">El nombre es requerido.</small>
+                    }
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Path -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs font-bold text-surface-600 uppercase">Ruta (Path)</label>
+                        <input pInputText class="w-full font-mono text-sm"
+                               [ngModel]="newMenu().path"
+                               (ngModelChange)="patch('path', $event)"
+                               placeholder="/sales/invoices"
+                               autocomplete="off" />
+                        <small class="text-surface-400">Opcional — déjelo vacío si es un menú agrupador.</small>
+                    </div>
+
+                    <!-- Orden -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs font-bold text-surface-600 uppercase">Orden de Aparición *</label>
+                        <input pInputText type="number" min="1" class="w-full"
+                               [ngModel]="newMenu().order"
+                               (ngModelChange)="patch('order', $event)"
+                               placeholder="1" />
+                        @if (isOrderRequired()) {
+                            <small class="text-red-500">Debe ser un número mayor a 0.</small>
+                        }
+                    </div>
+                </div>
+
+                <!-- Menú padre -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs font-bold text-surface-600 uppercase">Menú Padre</label>
+                    <p-select [options]="parentMenus" [(ngModel)]="selectedParent"
+                              optionLabel="name" [showClear]="true"
+                              placeholder="Ninguno — menú de nivel principal"
+                              [filter]="true" filterBy="name"
+                              appendTo="body" class="w-full">
+                    </p-select>
+                    <small class="text-surface-400">Si selecciona uno, este menú aparecerá como submenú.</small>
+                </div>
+
+                <!-- Selector de icono -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs font-bold text-surface-600 uppercase">Icono *</label>
+
+                    <div class="flex gap-2 items-center">
+                        <div class="flex items-center gap-2 flex-1 border border-surface-300 rounded-lg px-3 bg-white
+                                    focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                            @if (newMenu().icon) {
+                                <i class="pi {{newMenu().icon}} text-primary"></i>
+                            } @else {
+                                <i class="pi pi-image text-surface-300"></i>
+                            }
+                            <input pInputText class="flex-1 border-0 shadow-none focus:ring-0 py-2 bg-transparent font-mono text-sm"
+                                   [ngModel]="newMenu().icon"
+                                   (ngModelChange)="patch('icon', $event)"
+                                   placeholder="pi-home" />
+                        </div>
+                    </div>
+                    @if (isIconRequired()) {
+                        <small class="text-red-500">Seleccione o escriba un icono.</small>
+                    }
+
+                    <!-- Buscador de iconos -->
+                    <div class="flex items-center gap-2 border border-surface-200 rounded-lg px-3 bg-surface-50 mt-1">
+                        <i class="pi pi-search text-surface-400 text-sm"></i>
+                        <input pInputText class="flex-1 border-0 shadow-none focus:ring-0 py-1.5 bg-transparent text-sm"
+                               [ngModel]="iconSearch()"
+                               (ngModelChange)="iconSearch.set($event)"
+                               placeholder="Buscar icono..." />
+                    </div>
+
+                    <!-- Grid de iconos -->
+                    <div class="grid grid-cols-8 sm:grid-cols-10 gap-2 mt-2 max-h-44 overflow-y-auto p-2
+                                border border-surface-200 rounded-xl bg-surface-50">
+                        @for (icon of filteredIcons(); track icon) {
+                            <button type="button"
+                                    (click)="selectIcon(icon)"
+                                    [pTooltip]="icon" tooltipPosition="top"
+                                    class="aspect-square flex items-center justify-center rounded-lg border transition-all"
+                                    [class]="newMenu().icon === icon
+                                        ? 'bg-primary border-primary text-white shadow-md scale-105'
+                                        : 'bg-white border-surface-200 text-surface-600 hover:border-primary hover:text-primary'">
+                                <i class="pi {{icon}}"></i>
+                            </button>
+                        }
+                        @if (filteredIcons().length === 0) {
+                            <div class="col-span-full text-center text-surface-400 text-sm py-3">
+                                Sin coincidencias. Puede escribir el icono manualmente arriba.
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Estado -->
+                <div class="flex items-center justify-between p-4 bg-surface-50 rounded-xl border border-surface-200">
+                    <div>
+                        <p class="font-semibold text-surface-700 m-0">Menú Activo</p>
+                        <p class="text-xs text-surface-400 m-0">Los menús inactivos no se muestran en la navegación.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer"
+                               [checked]="isActive()"
+                               (change)="isActive.set(!isActive())" />
+                        <div class="w-12 h-6 bg-surface-300 rounded-full peer
+                                    peer-checked:bg-green-500 transition-colors
+                                    after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                                    after:bg-white after:rounded-full after:h-5 after:w-5
+                                    after:transition-all peer-checked:after:translate-x-6">
+                        </div>
+                    </label>
+                </div>
             </div>
 
-            <div class="col-span-4 pt-2"> 
-                <label for="parent" class="font-semibold w-24">Menú Padre</label>
-                <p-select [options]="parentMenus" [(ngModel)]="selectedParent"
-                    class="flex-auto w-full"  
-                    optionLabel="name" placeholder="Seleccionar menú padre (opcional)" />
-            </div>
+            <!-- ════════ Columna preview ════════ -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-4 flex flex-col gap-4">
+                    <div class="bg-gradient-to-br from-surface-800 to-surface-900 rounded-2xl p-5 shadow-lg">
+                        <p class="text-xs font-bold text-surface-400 uppercase tracking-wide m-0 mb-3">
+                            Vista Previa
+                        </p>
 
-            <div class="col-span-4 pt-2"> 
-                <label for="icon" class="font-semibold w-24">Icono</label>
-                <input pInputText id="icon" class="flex-auto w-full"  
-                        [(ngModel)]="newMenu().icon"
-                        autocomplete="off" placeholder="pi pi-home" />
-                @if (isIconRequired()) {
-                    <p-message severity="error" size="small" 
-                        variant="simple">El Icono es requerido</p-message>
-                }
-            </div>
+                        <!-- Item de menú simulado -->
+                        <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg
+                                    bg-white/10 text-white"
+                             [class.opacity-40]="!isActive()">
+                            @if (newMenu().icon) {
+                                <i class="pi {{newMenu().icon}} text-lg"></i>
+                            } @else {
+                                <i class="pi pi-circle text-lg text-surface-400"></i>
+                            }
+                            <span class="font-medium">
+                                {{ newMenu().name || 'Nombre del menú' }}
+                            </span>
+                            @if (!isActive()) {
+                                <span class="ml-auto text-xs bg-red-500/30 text-red-200 px-2 py-0.5 rounded">
+                                    Inactivo
+                                </span>
+                            }
+                        </div>
 
-            <div class="col-span-4 pt-2"> 
-                <label for="order" class="font-semibold w-24">Orden Menú</label>
-                <input pInputText id="order" type="number" class="flex-auto w-full"  
-                        [(ngModel)]="newMenu().order"
-                        autocomplete="off" placeholder="1" min="1" />
-                @if (isOrderRequired()) {
-                    <p-message severity="error" size="small" 
-                        variant="simple">El Orden es requerido y debe ser mayor a 0</p-message>
-                }
-            </div>
-            
-            <div class="col-span-4 pt-2"> 
-                <label for="active" class="font-semibold w-24">Estado</label>
-                <p-select [options]="status" [(ngModel)]="selected"
-                    class="flex-auto w-full"  
-                    optionLabel="description" placeholder="Seleccionar" />
-                @if (isStatusRequired()) {
-                    <p-message severity="error" size="small" 
-                        variant="simple">El Estado es requerido</p-message>
-                }
-            </div>
+                        <!-- Detalles -->
+                        <div class="mt-4 flex flex-col gap-2 text-sm">
+                            <div class="flex justify-between text-surface-300">
+                                <span>Ruta:</span>
+                                <span class="font-mono text-surface-100">{{ newMenu().path || '—' }}</span>
+                            </div>
+                            <div class="flex justify-between text-surface-300">
+                                <span>Orden:</span>
+                                <span class="text-surface-100">{{ newMenu().order || '—' }}</span>
+                            </div>
+                            <div class="flex justify-between text-surface-300">
+                                <span>Padre:</span>
+                                <span class="text-surface-100">{{ selectedParent?.name || 'Nivel principal' }}</span>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 flex gap-2 text-xs text-blue-700">
+                        <i class="pi pi-info-circle mt-0.5 flex-shrink-0"></i>
+                        <span>Los iconos usan la librería <strong>PrimeIcons</strong>. Puede ver el listado
+                        completo en primefaces.org/primeicons.</span>
+                    </div>
+                </div>
+            </div>
 
         </div>
-            <div class="flex justify-end gap-4 pt-3">
-                <p-button 
-                    label="Crear Menú" 
-                    icon="pi pi-check" 
-                    styleClass="p-button-sm p-button-success" 
-                    (click)="create()" 
-                    [disabled]="isFormInvalid()">
-                </p-button>
-            
-                <p-button 
-                    label="Limpiar" 
-                    icon="pi pi-refresh" 
-                    styleClass="p-button-sm p-button-secondary"
-                    (click)="reset()">
-                </p-button>
-            </div> 
+
+        <!-- ── Botones ───────────────────────────────────────── -->
+        <div class="flex justify-end gap-3 pt-4 mt-2 border-t border-surface-200">
+            <p-button label="Limpiar" icon="pi pi-refresh"
+                      severity="secondary" [outlined]="true" (click)="reset()">
+            </p-button>
+            <p-button label="Crear Menú" icon="pi pi-check"
+                      severity="success" (click)="create()">
+            </p-button>
+        </div>
     </p-card>
 </div>

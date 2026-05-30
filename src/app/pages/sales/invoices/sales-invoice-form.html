@@ -33,45 +33,56 @@
                     </div>
                     }
 
-                    <form [formGroup]="form" class="grid grid-cols-1 md:grid-cols-12 gap-8 p-4">
+                    <form [formGroup]="form" class="grid grid-cols-1 md:grid-cols-12 gap-6 p-4">
 
-            
-            <div class="md:col-span-3 flex flex-col gap-2">
+            <!-- Fila 1: Cliente y datos de contacto — se selecciona primero para filtrar tipos de doc -->
+            <div class="md:col-span-4 flex flex-col gap-2">
                 <label class="text-xs font-bold text-surface-600 uppercase">Cliente</label>
-                <p-select [options]="clients" formControlName="client" 
+                <p-select [options]="clients" formControlName="client"
                     optionLabel="first_name" optionValue="id"
-                    placeholder="Seleccione Cliente" 
-                    [filter]="true" class="w-full" [appendTo]="'body'"></p-select>
+                    placeholder="Seleccione Cliente"
+                    [filter]="true" class="w-full" appendTo="body">
+                </p-select>
             </div>
 
-            <div class="md:col-span-3 flex flex-col gap-2" *ngIf="showCustomerName">
-                <label class="text-xs font-bold text-surface-600 uppercase">Nombre para Factura</label>
-                <input pInputText formControlName="customer_name" placeholder="Nombre (opcional)" class="w-full" />
-            </div>
+            @if (showCustomerName) {
+                <div class="md:col-span-4 flex flex-col gap-2">
+                    <label class="text-xs font-bold text-surface-600 uppercase">Nombre para Factura</label>
+                    <input pInputText formControlName="customer_name" placeholder="Nombre (opcional)" class="w-full" />
+                </div>
+            }
 
-            <div class="md:col-span-3 flex flex-col gap-2">
+            <div class="md:col-span-4 flex flex-col gap-2">
                 <label class="text-xs font-bold text-surface-600 uppercase">Email Destinatario</label>
                 <div class="flex items-center gap-2">
                     <input type="checkbox" formControlName="send_by_email" id="send_by_email" class="p-checkbox" />
-                    <input pInputText formControlName="email_target" placeholder="Correo (opcional)" class="w-full" />       
+                    <input pInputText formControlName="email_target" placeholder="Correo (opcional)" class="w-full" />
                 </div>
             </div>
 
-            <div class="md:col-span-3 flex flex-col gap-2 relative">
+            <p-divider class="md:col-span-12 my-0"></p-divider>
+
+            <!-- Fila 2: Tipo doc / Bodega / Fecha (solo crédito) -->
+            <div class="md:col-span-4 flex flex-col gap-2">
                 <label class="text-xs font-bold text-surface-600 uppercase">Tipo de Documento</label>
                 <p-select [options]="filteredDocumentTypes" formControlName="document_type" optionLabel="name" optionValue="id"
                     placeholder="Seleccione Tipo" class="w-full" appendTo="body"></p-select>
             </div>
 
-            <div class="md:col-span-3 flex flex-col gap-2 relative">
+            <div class="md:col-span-4 flex flex-col gap-2">
                 <label class="text-xs font-bold text-surface-600 uppercase">Bodega de Despacho</label>
                 <p-select [options]="warehouses" formControlName="warehouse_id" optionLabel="name" optionValue="id"
                     placeholder="Seleccione Bodega" class="w-full" appendTo="body"></p-select>
             </div>
-            <div class="md:col-span-3 flex flex-col gap-2 relative">
+
+            <div class="md:col-span-4 flex flex-col gap-2">
                 <label class="text-xs font-bold text-surface-600 uppercase">Fecha de Vencimiento</label>
-                <p-datePicker formControlName="due_date" [showIcon]="true" class="w-full" styleClass="w-full" 
-                    [appendTo]="'body'"></p-datePicker>
+                <p-datePicker formControlName="due_date" [showIcon]="true"
+                    class="w-full" styleClass="w-full" appendTo="body">
+                </p-datePicker>
+                @if (!isCredit) {
+                    <small class="text-surface-400">Contado: vence el día de emisión</small>
+                }
             </div>
 
             <p-divider class="md:col-span-12"></p-divider>
@@ -142,21 +153,102 @@
             <div class="md:col-span-7 flex flex-col gap-4">
                 <textarea pInputTextarea formControlName="notes" rows="4" class="w-full p-4 border border-surface-200 rounded-xl" placeholder="Observaciones de la factura..."></textarea>
 
-                <!-- Pagos Mixtos -->
+                <!-- Formas de Pago -->
                 @if (payments.length > 0) {
-                <div class="border border-surface-200 rounded-xl p-4 bg-white shadow-sm mt-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <h4 class="font-bold text-primary-800 m-0"><i class="pi pi-wallet mr-2"></i>Desglose de Pagos (Factura Contado)</h4>
-                        <p-button label="Añadir Pago" icon="pi pi-plus" size="small" [text]="true" (click)="addPayment()"></p-button>
-                    </div>
-                    <div formArrayName="payments" class="flex flex-col gap-3">
-                        @for (payment of payments.controls; track $index) {
-                            <div [formGroupName]="$index" class="flex gap-3 items-center">
-                                <p-select [options]="paymentTypes" formControlName="payment_type" optionLabel="name" optionValue="id" placeholder="Tipo de Pago" class="flex-1" appendTo="body"></p-select>
-                                <input pInputText type="number" formControlName="amount" placeholder="Monto" class="w-32 text-right" />
-                                <input pInputText formControlName="reference" placeholder="Referencia (Ej: Yappy #)" class="w-48" />
-                                <p-button icon="pi pi-times" severity="danger" [text]="true" (click)="removePayment($index)" [disabled]="payments.length === 1"></p-button>
+                <div class="rounded-2xl overflow-hidden shadow-md border-2"
+                     [class]="isPaymentBalanced ? 'border-green-300' : 'border-orange-300'">
+
+                    <!-- Header -->
+                    <div class="flex justify-between items-center px-5 py-4"
+                         [class]="isPaymentBalanced ? 'bg-green-50 border-b border-green-200' : 'bg-orange-50 border-b border-orange-200'">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl flex items-center justify-center"
+                                 [class]="isPaymentBalanced ? 'bg-green-500' : 'bg-orange-400'">
+                                <i class="pi text-white text-sm"
+                                   [class]="isPaymentBalanced ? 'pi-check' : 'pi-wallet'"></i>
                             </div>
+                            <div>
+                                <h4 class="font-bold m-0 text-sm"
+                                    [class]="isPaymentBalanced ? 'text-green-900' : 'text-orange-900'">
+                                    Formas de Pago — Factura Contado
+                                </h4>
+                                <p class="m-0 text-xs"
+                                   [class]="isPaymentBalanced ? 'text-green-700' : 'text-orange-700'">
+                                    {{ isPaymentBalanced ? 'Pagos completos ✓' : 'Pendiente: B/. ' + (paymentPending | number:'1.2-2') }}
+                                </p>
+                            </div>
+                        </div>
+                        <p-button label="Agregar" icon="pi pi-plus" size="small"
+                                  [outlined]="true" (click)="addPayment()"
+                                  [severity]="isPaymentBalanced ? 'success' : 'warn'">
+                        </p-button>
+                    </div>
+
+                    <!-- Filas de pago -->
+                    <div formArrayName="payments" class="divide-y divide-surface-100 bg-white">
+                        @for (payment of payments.controls; track $index) {
+                            <div [formGroupName]="$index"
+                                 class="flex gap-3 items-center px-5 py-3 hover:bg-surface-50 transition-colors">
+
+                                <!-- Número de fila -->
+                                <span class="w-6 h-6 rounded-full bg-surface-200 text-surface-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                                    {{$index + 1}}
+                                </span>
+
+                                <!-- Tipo de pago -->
+                                <p-select [options]="paymentTypes"
+                                          formControlName="payment_type"
+                                          optionLabel="name" optionValue="id"
+                                          placeholder="Tipo de pago"
+                                          appendTo="body"
+                                          class="flex-1">
+                                </p-select>
+
+                                <!-- Monto con prefijo B/. -->
+                                <div class="flex items-center gap-1 border border-surface-300 rounded-lg px-3 bg-white focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                                    <span class="text-surface-500 text-sm font-bold select-none">B/.</span>
+                                    <input pInputText type="number" formControlName="amount"
+                                           placeholder="0.00"
+                                           class="w-24 text-right border-0 shadow-none focus:ring-0 p-1 bg-transparent" />
+                                </div>
+
+                                <!-- Referencia -->
+                                <input pInputText formControlName="reference"
+                                       placeholder="# Referencia / Confirmación"
+                                       class="w-44 text-sm" />
+
+                                <!-- Eliminar -->
+                                <p-button icon="pi pi-trash" severity="danger" [text]="true"
+                                          (click)="removePayment($index)"
+                                          [disabled]="payments.length === 1"
+                                          pTooltip="Eliminar" tooltipPosition="left">
+                                </p-button>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Footer resumen -->
+                    <div class="px-5 py-3 flex justify-between items-center bg-surface-50 border-t border-surface-200">
+                        <div class="flex gap-6 text-sm">
+                            <span class="text-surface-600">
+                                Total factura:
+                                <strong class="text-surface-900 ml-1">{{form.get('total')?.value | currency}}</strong>
+                            </span>
+                            <span class="text-surface-600">
+                                Pagado:
+                                <strong class="ml-1" [class]="isPaymentBalanced ? 'text-green-700' : 'text-orange-600'">
+                                    {{paymentsSum | currency}}
+                                </strong>
+                            </span>
+                        </div>
+                        @if (!isPaymentBalanced) {
+                            <span class="text-xs font-semibold text-orange-600 bg-orange-100 px-3 py-1 rounded-full">
+                                Diferencia: {{paymentPending | currency}}
+                            </span>
+                        } @else {
+                            <span class="text-xs font-semibold text-green-700 bg-green-100 px-3 py-1 rounded-full">
+                                <i class="pi pi-check mr-1"></i>Balanceado
+                            </span>
                         }
                     </div>
                 </div>

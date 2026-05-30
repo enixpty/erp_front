@@ -1,60 +1,163 @@
+<p-toast></p-toast>
+
 <div class="p-6 bg-surface-50 min-h-screen">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-surface-900 m-0">Monitor de Antigüedad</h1>
-        <div class="flex gap-3 bg-white p-2 rounded-lg shadow-sm border border-surface-200">
-            <p-select [options]="clients" [(ngModel)]="selectedClient" optionLabel="first_name" 
-                      placeholder="Seleccionar cliente..." [filter]="true" class="w-72"></p-select>
-            <p-button label="Analizar" icon="pi pi-chart-line" (onClick)="loadClientData()" severity="primary"></p-button>
-            <p-button label="Estado Cuenta" icon="pi pi-print" severity="secondary" [disabled]="!selectedClient" (onClick)="printStatement()"></p-button>
+
+    <!-- ── Encabezado y controles ────────────────────────────── -->
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-surface-900 m-0">Monitor de Antigüedad</h1>
+            <p class="text-surface-500 text-sm m-0 mt-1">Análisis de cuentas por cobrar por cliente</p>
+        </div>
+
+        <div class="flex flex-wrap gap-3 items-end bg-white p-3 rounded-xl shadow-sm border border-surface-200">
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-surface-600 uppercase">Cliente</label>
+                <p-select [options]="clients" [(ngModel)]="selectedClient" optionLabel="first_name"
+                          placeholder="Seleccionar cliente..." [filter]="true"
+                          appendTo="body" styleClass="w-64">
+                </p-select>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-surface-600 uppercase">Desde</label>
+                <p-datePicker [(ngModel)]="startDate" [showIcon]="true" appendTo="body"
+                              dateFormat="dd/mm/yy" styleClass="w-36">
+                </p-datePicker>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-surface-600 uppercase">Hasta</label>
+                <p-datePicker [(ngModel)]="endDate" [showIcon]="true" appendTo="body"
+                              dateFormat="dd/mm/yy" styleClass="w-36">
+                </p-datePicker>
+            </div>
+
+            <p-button label="Analizar" icon="pi pi-chart-line"
+                      (onClick)="loadClientData()" severity="primary">
+            </p-button>
+            <p-button label="Estado de Cuenta" icon="pi pi-file-pdf"
+                      severity="secondary" [outlined]="true"
+                      [disabled]="!selectedClient" (onClick)="printStatement()">
+            </p-button>
         </div>
     </div>
 
-
     @if (agingData) {
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-            <div class="bg-white p-5 rounded-xl border border-surface-100 shadow-sm flex items-center gap-4 transition-transform hover:-translate-y-1">
-                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg"><i class="pi pi-bolt text-xl"></i></div>
-                <div>
-                    <p class="text-xs font-semibold text-surface-500 uppercase tracking-wider">Actual</p>
-                    <div class="text-xl font-bold text-surface-900">{{agingData.current | currency}}</div>
+        <!-- ── Resumen total + salud ─────────────────────────── -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-primary-600 to-primary-700 text-white p-5 rounded-2xl shadow-md">
+                <p class="text-xs font-semibold uppercase tracking-wider opacity-80 m-0">Deuda Total</p>
+                <div class="text-3xl font-black mt-1">{{totalDebt | currency}}</div>
+                <p class="text-xs opacity-70 m-0 mt-1">{{selectedClient?.first_name}}</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-surface-100">
+                <p class="text-xs font-semibold uppercase tracking-wider text-surface-500 m-0">Al Día</p>
+                <div class="text-2xl font-black text-green-600 mt-1">{{agingData.current | currency}}</div>
+                <p class="text-xs text-surface-400 m-0 mt-1">
+                    {{(100 - overduePercent) | number:'1.0-1'}}% del total
+                </p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border"
+                 [class]="overduePercent > 50 ? 'border-red-200' : overduePercent > 20 ? 'border-orange-200' : 'border-surface-100'">
+                <p class="text-xs font-semibold uppercase tracking-wider text-surface-500 m-0">Vencido</p>
+                <div class="text-2xl font-black mt-1"
+                     [class]="overduePercent > 50 ? 'text-red-600' : overduePercent > 20 ? 'text-orange-500' : 'text-surface-700'">
+                    {{overdueDebt | currency}}
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                    <div class="flex-1 h-2 bg-surface-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all"
+                             [class]="overduePercent > 50 ? 'bg-red-500' : overduePercent > 20 ? 'bg-orange-400' : 'bg-green-500'"
+                             [style.width.%]="overduePercent">
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold"
+                          [class]="overduePercent > 50 ? 'text-red-600' : overduePercent > 20 ? 'text-orange-500' : 'text-green-600'">
+                        {{overduePercent | number:'1.0-1'}}%
+                    </span>
                 </div>
             </div>
-            <div class="bg-white p-5 rounded-xl border border-surface-100 shadow-sm flex items-center gap-4">
-                <div class="p-3 bg-green-50 text-green-600 rounded-lg"><i class="pi pi-calendar text-xl"></i></div>
-                <div>
-                    <p class="text-xs font-semibold text-surface-500 uppercase tracking-wider">30 Días</p>
-                    <div class="text-xl font-bold text-surface-900">{{agingData.days_30 | currency}}</div>
+        </div>
+
+        <!-- ── Distribución por antigüedad ───────────────────── -->
+        <div class="bg-white p-5 rounded-2xl border border-surface-200 shadow-sm mb-6">
+            <h3 class="text-sm font-bold text-surface-700 uppercase tracking-wide m-0 mb-4">
+                Distribución por Antigüedad
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i class="pi pi-bolt"></i></div>
+                        <span class="text-xs font-semibold text-surface-500 uppercase">Actual</span>
+                    </div>
+                    <div class="text-lg font-bold text-surface-900">{{agingData.current | currency}}</div>
+                    <div class="h-1.5 bg-surface-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-500 rounded-full" [style.width.%]="bucketPercent(agingData.current)"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-surface-100 shadow-sm flex items-center gap-4">
-                <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg"><i class="pi pi-clock text-xl"></i></div>
-                <div>
-                    <p class="text-xs font-semibold text-surface-500 uppercase tracking-wider">60 Días</p>
-                    <div class="text-xl font-bold text-surface-900">{{agingData.days_60 | currency}}</div>
+
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 bg-green-50 text-green-600 rounded-lg"><i class="pi pi-calendar"></i></div>
+                        <span class="text-xs font-semibold text-surface-500 uppercase">1–30 Días</span>
+                    </div>
+                    <div class="text-lg font-bold text-surface-900">{{agingData.days_30 | currency}}</div>
+                    <div class="h-1.5 bg-surface-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-green-500 rounded-full" [style.width.%]="bucketPercent(agingData.days_30)"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-surface-100 shadow-sm flex items-center gap-4">
-                <div class="p-3 bg-orange-50 text-orange-600 rounded-lg"><i class="pi pi-exclamation-triangle text-xl"></i></div>
-                <div>
-                    <p class="text-xs font-semibold text-surface-500 uppercase tracking-wider">90 Días</p>
-                    <div class="text-xl font-bold text-surface-900">{{agingData.days_90 | currency}}</div>
+
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 bg-yellow-50 text-yellow-600 rounded-lg"><i class="pi pi-clock"></i></div>
+                        <span class="text-xs font-semibold text-surface-500 uppercase">31–60 Días</span>
+                    </div>
+                    <div class="text-lg font-bold text-surface-900">{{agingData.days_60 | currency}}</div>
+                    <div class="h-1.5 bg-surface-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-yellow-500 rounded-full" [style.width.%]="bucketPercent(agingData.days_60)"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-surface-100 shadow-sm flex items-center gap-4">
-                <div class="p-3 bg-red-50 text-red-600 rounded-lg"><i class="pi pi-ban text-xl"></i></div>
-                <div>
-                    <p class="text-xs font-semibold text-surface-500 uppercase tracking-wider">120+ Días</p>
-                    <div class="text-xl font-bold text-surface-900">{{agingData.days_120_plus | currency}}</div>
+
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 bg-orange-50 text-orange-600 rounded-lg"><i class="pi pi-exclamation-triangle"></i></div>
+                        <span class="text-xs font-semibold text-surface-500 uppercase">61–90 Días</span>
+                    </div>
+                    <div class="text-lg font-bold text-surface-900">{{agingData.days_90 | currency}}</div>
+                    <div class="h-1.5 bg-surface-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-orange-500 rounded-full" [style.width.%]="bucketPercent(agingData.days_90)"></div>
+                    </div>
                 </div>
+
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 bg-red-50 text-red-600 rounded-lg"><i class="pi pi-ban"></i></div>
+                        <span class="text-xs font-semibold text-surface-500 uppercase">120+ Días</span>
+                    </div>
+                    <div class="text-lg font-bold text-red-700">{{agingData.days_120_plus | currency}}</div>
+                    <div class="h-1.5 bg-surface-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-red-500 rounded-full" [style.width.%]="bucketPercent(agingData.days_120_plus)"></div>
+                    </div>
+                </div>
+
             </div>
+        </div>
+    } @else {
+        <div class="flex flex-col items-center justify-center py-20 gap-3 text-surface-400">
+            <i class="pi pi-chart-bar text-5xl"></i>
+            <p class="text-lg font-semibold m-0">Seleccione un cliente y presione "Analizar"</p>
+            <p class="text-sm m-0">Verá la distribución de su deuda por antigüedad.</p>
         </div>
     }
 
     @if (subsidiaries.length > 0) {
-        <div class="bg-white p-6 rounded-xl border border-surface-200 shadow-sm">
-            <app-customtable 
+        <div class="bg-white p-6 rounded-2xl border border-surface-200 shadow-sm">
+            <app-customtable
                 titletable="Documentos con Saldo Pendiente"
-                [data]="subsidiaries" 
+                [data]="subsidiaries"
                 [columns]="cols">
             </app-customtable>
         </div>

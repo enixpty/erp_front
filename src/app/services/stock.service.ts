@@ -15,4 +15,8 @@ export class StockService {
   getValuation(): Observable<any> {
     return this.http.get<any>(`${this.url}valuation/`);
   }
+
+  exportExcel(): Observable<Blob> {
+    return this.http.get(`${this.url}export_excel/`, { responseType: 'blob' });
+  }
 }

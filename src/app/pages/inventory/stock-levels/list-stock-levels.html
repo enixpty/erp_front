@@ -1,36 +1,58 @@
+<p-toast></p-toast>
 <div class="p-4">
-  <p-card header="Existencias por Bodega">
+  <p-card>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-surface-800 m-0">Existencias por Bodega</h2>
+      <p-button label="Exportar Excel" icon="pi pi-file-excel" severity="success"
+                [outlined]="true" (onClick)="exportExcel()" [loading]="isExporting()">
+      </p-button>
+    </div>
     <app-customtable
       [genericCol]="cols"
       [loaderFunction]="loadStock"
-      [columnTemplates]="{ 'quantity': qtyTemplate, 'alert': alertTemplate }"
+      [columnTemplates]="{ 'quantity': qtyTemplate, 'reserved_quantity': reservedTemplate, 'available_quantity': availableTemplate, 'alert': alertTemplate }"
       [actionsTemplate]="actionTemplate">
     </app-customtable>
   </p-card>
 </div>
 
 <ng-template #qtyTemplate let-item>
+  <span class="font-semibold text-surface-700">{{ item.quantity | number:'1.2-2' }}</span>
+</ng-template>
+
+<ng-template #reservedTemplate let-item>
+  @if (item.reserved_quantity > 0) {
+    <p-tag [value]="(item.reserved_quantity | number:'1.2-2') ?? ''" severity="warn" pTooltip="Reservado por pedidos de venta pendientes"></p-tag>
+  } @else {
+    <span class="text-surface-400">—</span>
+  }
+</ng-template>
+
+<ng-template #availableTemplate let-item>
   <div class="flex items-center gap-2">
-    <p-tag 
-      [value]="(item.quantity | number:'1.2-2') ?? ''" 
-      [severity]="getSeverity(item.quantity, item.stock_min)">
+    <p-tag
+      [value]="(item.available_quantity | number:'1.2-2') ?? ''"
+      [severity]="getSeverity(item.available_quantity, item.stock_min)">
     </p-tag>
-    @if (item.quantity <= 0) {
-      <span class="text-xs text-red-500 font-bold">¡SIN STOCK!</span>
+    @if (item.available_quantity <= 0 && item.quantity > 0) {
+      <span class="text-xs text-orange-600 font-bold">Todo reservado</span>
+    }
+    @if (item.available_quantity < 0) {
+      <span class="text-xs text-red-600 font-bold">¡Sobrerreservado!</span>
     }
   </div>
 </ng-template>
 
 <ng-template #alertTemplate let-item>
-    <p-tag 
-      [value]="item.alert" 
+    <p-tag
+      [value]="item.alert"
       [severity]="item.alert === 'REORDENAR' ? 'danger' : 'success'">
     </p-tag>
 </ng-template>
 
 <ng-template #actionTemplate let-item>
-    <button pButton pRipple icon="pi pi-cart-plus" class="p-button-sm p-button-info" 
-            pTooltip="Generar Pedido de Reabastecimiento" 
+    <button pButton pRipple icon="pi pi-cart-plus" class="p-button-sm p-button-info"
+            pTooltip="Generar Pedido de Reabastecimiento"
             (click)="generateOrder(item)">
     </button>
 </ng-template>

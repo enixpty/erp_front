@@ -1,45 +1,259 @@
-<div class="p-4">
-  <p-card header="Nuevo Asiento Contable">
-    <form [formGroup]="form" class="flex flex-col gap-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="font-bold text-sm">Fecha</label>
-          <input type="date" pInputText formControlName="date">
-        </div>
-        <div class="flex flex-col gap-2 col-span-2">
-          <label class="font-bold text-sm">Descripción</label>
-          <input pInputText formControlName="description" placeholder="Descripción general del asiento">
-        </div>
-      </div>
-      
-      <div class="flex flex-col gap-3" formArrayName="lines">
-        <div class="font-bold text-lg border-b pb-2">Líneas del Asiento</div>
-        @for (line of lines.controls; track $index) {
-          <div [formGroupName]="$index" class="grid grid-cols-12 gap-3 items-center p-2 bg-surface-50 rounded">
-            <div class="col-span-4">
-              <p-select formControlName="account_id" [options]="accounts()" optionLabel="name" optionValue="id" [filter]="true" placeholder="Cuenta" class="w-full"></p-select>
-            </div>
-            <div class="col-span-2">
-              <p-inputNumber formControlName="debit" mode="decimal" placeholder="Débito" class="w-full"></p-inputNumber>
-            </div>
-            <div class="col-span-2">
-              <p-inputNumber formControlName="credit" mode="decimal" placeholder="Crédito" class="w-full"></p-inputNumber>
-            </div>
-            <div class="col-span-3">
-              <input pInputText formControlName="description" placeholder="Glosa" class="w-full">
-            </div>
-            <div class="col-span-1 text-center">
-              <p-button icon="pi pi-trash" severity="danger" text (onClick)="removeLine($index)"></p-button>
-            </div>
-          </div>
-        }
-      </div>
-      
-      <div class="flex gap-2">
-        <p-button label="Agregar Línea" icon="pi pi-plus" severity="secondary" (onClick)="addLine()"></p-button>
-        <p-button label="Guardar Asiento" icon="pi pi-check" severity="primary" (onClick)="save()"></p-button>
-      </div>
-    </form>
-  </p-card>
-</div>
+<p-toast></p-toast>
 
+<div class="p-4 flex flex-col gap-4">
+<p-card>
+
+    <!-- ── Encabezado ──────────────────────────────────────── -->
+    <ng-template pTemplate="header">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-surface-200 bg-surface-50">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-primary rounded-xl">
+                    <i class="pi pi-book text-xl text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-primary-900 m-0">Nuevo Asiento Manual</h2>
+                    <p class="text-surface-500 text-sm m-0">Asiento de doble entrada — Débitos = Créditos</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <p-button label="Cancelar" icon="pi pi-times" severity="secondary"
+                          [outlined]="true" [routerLink]="['/accounting/entries']">
+                </p-button>
+                <p-button label="Guardar Asiento" icon="pi pi-check" severity="primary"
+                          (onClick)="save()" [loading]="isSaving()"
+                          [disabled]="form.invalid || !isBalanced">
+                </p-button>
+            </div>
+        </div>
+    </ng-template>
+
+    <form [formGroup]="form" class="flex flex-col gap-6 p-2">
+
+        <!-- ── Datos generales ─────────────────────────────── -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div class="md:col-span-2 flex flex-col gap-2">
+                <label class="text-xs font-bold text-surface-600 uppercase">Fecha *</label>
+                <input pInputText type="date" formControlName="date" class="w-full" />
+            </div>
+            <div class="md:col-span-7 flex flex-col gap-2">
+                <label class="text-xs font-bold text-surface-600 uppercase">Descripción *</label>
+                <input pInputText formControlName="description"
+                       placeholder="Descripción general del asiento contable" class="w-full" />
+            </div>
+            <div class="md:col-span-3 flex flex-col gap-2">
+                <label class="text-xs font-bold text-surface-600 uppercase">Referencia</label>
+                <input pInputText formControlName="reference"
+                       placeholder="Ej: FAC-00001, REC-003..." class="w-full" />
+            </div>
+        </div>
+
+        <!-- ── Indicador de balance ────────────────────────── -->
+        <div class="rounded-xl border-2 p-4 flex flex-wrap gap-6 items-center transition-colors"
+             [class]="isBalanced
+                ? 'border-green-300 bg-green-50'
+                : difference < 1
+                    ? 'border-orange-300 bg-orange-50'
+                    : 'border-red-300 bg-red-50'">
+
+            <div class="flex items-center gap-2">
+                <i class="pi pi-arrow-down text-blue-600 text-lg"></i>
+                <div>
+                    <p class="text-xs font-bold text-surface-500 uppercase m-0">Total Débitos</p>
+                    <p class="text-xl font-black text-blue-700 m-0">
+                        {{totalDebit | number:'1.2-2'}}
+                    </p>
+                </div>
+            </div>
+
+            <i class="pi pi-equals text-surface-400 text-2xl hidden md:block"></i>
+
+            <div class="flex items-center gap-2">
+                <i class="pi pi-arrow-up text-indigo-600 text-lg"></i>
+                <div>
+                    <p class="text-xs font-bold text-surface-500 uppercase m-0">Total Créditos</p>
+                    <p class="text-xl font-black text-indigo-700 m-0">
+                        {{totalCredit | number:'1.2-2'}}
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex-1"></div>
+
+            <div class="flex items-center gap-3">
+                @if (isBalanced) {
+                    <div class="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-xl">
+                        <i class="pi pi-check-circle text-green-600 text-xl"></i>
+                        <span class="font-bold text-green-800">Asiento Balanceado</span>
+                    </div>
+                } @else {
+                    <div class="flex flex-col items-end">
+                        <span class="text-xs font-bold text-surface-500 uppercase">Diferencia</span>
+                        <span class="text-xl font-black"
+                              [class]="difference < 1 ? 'text-orange-600' : 'text-red-600'">
+                            {{difference | number:'1.2-2'}}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 px-4 py-2 rounded-xl"
+                         [class]="difference < 1 ? 'bg-orange-100' : 'bg-red-100'">
+                        <i class="pi pi-exclamation-triangle text-xl"
+                           [class]="difference < 1 ? 'text-orange-500' : 'text-red-500'"></i>
+                        <span class="font-bold"
+                              [class]="difference < 1 ? 'text-orange-700' : 'text-red-700'">
+                            Sin balancear
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- ── Tabla de líneas ─────────────────────────────── -->
+        <div class="flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-surface-800 m-0 flex items-center gap-2">
+                    <i class="pi pi-list text-primary"></i> Líneas del Asiento
+                </h3>
+                <p-button label="Agregar Línea" icon="pi pi-plus" size="small"
+                          severity="secondary" [outlined]="true" (onClick)="addLine()">
+                </p-button>
+            </div>
+
+            <div class="border border-surface-200 rounded-xl overflow-hidden shadow-sm">
+
+                <!-- Cabecera -->
+                <div class="grid bg-primary-50 text-primary-900 uppercase text-xs font-bold"
+                     style="grid-template-columns: 2rem 1fr 11rem 11rem 1fr 2.5rem">
+                    <div class="p-3 text-center">#</div>
+                    <div class="p-3">Cuenta Contable *</div>
+                    <div class="p-3 text-right">Débito</div>
+                    <div class="p-3 text-right">Crédito</div>
+                    <div class="p-3">Glosa</div>
+                    <div class="p-3"></div>
+                </div>
+
+                <!-- Filas -->
+                <div formArrayName="lines">
+                    @for (line of lines.controls; track $index) {
+                        <div [formGroupName]="$index"
+                             class="grid border-t border-surface-100 hover:bg-blue-50/20 transition-colors items-center"
+                             style="grid-template-columns: 2rem 1fr 11rem 11rem 1fr 2.5rem">
+
+                            <!-- Nro -->
+                            <div class="p-2 text-center">
+                                <span class="w-6 h-6 rounded-full bg-surface-200 text-surface-600
+                                             text-xs font-bold flex items-center justify-center mx-auto">
+                                    {{$index + 1}}
+                                </span>
+                            </div>
+
+                            <!-- Cuenta -->
+                            <div class="p-2">
+                                <p-select
+                                    [options]="accounts()"
+                                    formControlName="account_id"
+                                    optionLabel="searchLabel"
+                                    optionValue="id"
+                                    [filter]="true"
+                                    filterBy="searchLabel"
+                                    placeholder="Buscar cuenta..."
+                                    appendTo="body"
+                                    class="w-full"
+                                    [class.ng-invalid]="line.get('account_id')?.invalid && line.get('account_id')?.touched">
+                                    <ng-template let-acc pTemplate="item">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <span class="text-sm">{{acc.name}}</span>
+                                            <span class="font-mono text-xs bg-surface-100 px-2 py-0.5 rounded text-primary-600 flex-shrink-0">
+                                                {{acc.code}}
+                                            </span>
+                                        </div>
+                                    </ng-template>
+                                </p-select>
+                            </div>
+
+                            <!-- Débito -->
+                            <div class="p-2">
+                                <p-inputNumber
+                                    formControlName="debit"
+                                    mode="decimal"
+                                    [minFractionDigits]="2"
+                                    [maxFractionDigits]="2"
+                                    placeholder="0.00"
+                                    inputStyleClass="text-right w-full text-blue-700 font-semibold"
+                                    styleClass="w-full"
+                                    (onInput)="onDebitChange($index)">
+                                </p-inputNumber>
+                            </div>
+
+                            <!-- Crédito -->
+                            <div class="p-2">
+                                <p-inputNumber
+                                    formControlName="credit"
+                                    mode="decimal"
+                                    [minFractionDigits]="2"
+                                    [maxFractionDigits]="2"
+                                    placeholder="0.00"
+                                    inputStyleClass="text-right w-full text-indigo-700 font-semibold"
+                                    styleClass="w-full"
+                                    (onInput)="onCreditChange($index)">
+                                </p-inputNumber>
+                            </div>
+
+                            <!-- Glosa -->
+                            <div class="p-2">
+                                <input pInputText formControlName="description"
+                                       placeholder="Descripción de esta línea..."
+                                       class="w-full text-sm" />
+                            </div>
+
+                            <!-- Eliminar -->
+                            <div class="p-2 flex justify-center">
+                                <p-button icon="pi pi-trash" [text]="true" severity="danger"
+                                          pTooltip="Eliminar línea"
+                                          (onClick)="removeLine($index)">
+                                </p-button>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Fila de totales -->
+                <div class="grid border-t-2 border-surface-300 bg-surface-100 font-bold items-center"
+                     style="grid-template-columns: 2rem 1fr 11rem 11rem 1fr 2.5rem">
+                    <div></div>
+                    <div class="p-3 text-right text-sm text-surface-600 uppercase tracking-wide">
+                        Totales
+                    </div>
+                    <div class="p-3 text-right text-blue-800 text-base">
+                        {{totalDebit | number:'1.2-2'}}
+                    </div>
+                    <div class="p-3 text-right text-indigo-800 text-base">
+                        {{totalCredit | number:'1.2-2'}}
+                    </div>
+                    <div class="p-3">
+                        @if (!isBalanced) {
+                            <span class="text-xs text-red-500 font-semibold">
+                                Diferencia: {{difference | number:'1.2-2'}}
+                            </span>
+                        }
+                    </div>
+                    <div></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── Botones pie ─────────────────────────────────── -->
+        <div class="flex justify-end gap-3 pt-2 border-t border-surface-200">
+            <p-button label="Cancelar" icon="pi pi-times"
+                      severity="secondary" [outlined]="true"
+                      [routerLink]="['/accounting/entries']">
+            </p-button>
+            <p-button label="Guardar Asiento" icon="pi pi-check"
+                      severity="primary" (onClick)="save()"
+                      [loading]="isSaving()"
+                      [disabled]="form.invalid || !isBalanced">
+            </p-button>
+        </div>
+
+    </form>
+</p-card>
+</div>

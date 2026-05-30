@@ -1,138 +1,283 @@
-<div class="p-6 bg-surface-100 min-h-screen">
-    <!-- Header Profesional -->
-    <p-card styleClass="shadow-xl border-t-4 border-t-primary rounded-2xl mb-6">
-        <div class="flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="bg-primary-100 p-3 rounded-xl">
-                    <i class="pi pi-sliders-h text-primary-700 text-2xl"></i>
+<p-toast></p-toast>
+
+<div class="p-4 flex flex-col gap-5">
+
+    <!-- ══════════════════════════════════════════════════
+         PANEL DE SALUD
+    ══════════════════════════════════════════════════ -->
+    <p-card>
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-surface-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                        <i class="pi pi-heart-fill text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-primary-900 m-0">Panel de Salud Contable</h2>
+                        <p class="text-surface-500 text-sm m-0">
+                            Estado de la configuración por módulo de negocio
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="text-2xl font-bold text-primary-900 m-0">Configuración Contable</h2>
-                    <p class="text-surface-500 m-0 text-sm">Vincule eventos de negocio con cuentas del libro mayor.</p>
+                <div class="flex items-center gap-3">
+                    @if (healthData()) {
+                        <p-tag
+                            [value]="healthData().overall_ok ? 'Sistema listo' : 'Requiere configuración'"
+                            [severity]="healthData().overall_ok ? 'success' : 'danger'"
+                            [icon]="healthData().overall_ok ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'">
+                        </p-tag>
+                    }
+                    <p-button icon="pi pi-refresh" [text]="true" pTooltip="Actualizar"
+                              (onClick)="loadHealth()" [loading]="healthLoading()">
+                    </p-button>
                 </div>
             </div>
-            <p-button label="Nuevo Enlace" icon="pi pi-plus" (click)="openNew()" severity="primary" size="small" styleClass="rounded-lg shadow-md"></p-button>
-        </div>
+        </ng-template>
+
+        <!-- Skeleton mientras carga -->
+        @if (healthLoading()) {
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 p-2">
+                @for (s of [1,2,3,4,5]; track s) {
+                    <div class="flex flex-col gap-2 p-4 border border-surface-200 rounded-xl">
+                        <p-skeleton height="1.5rem" styleClass="mb-2"></p-skeleton>
+                        <p-skeleton height="1rem"></p-skeleton>
+                        <p-skeleton height="1rem"></p-skeleton>
+                        <p-skeleton height="1rem"></p-skeleton>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Tarjetas de grupos -->
+        @if (!healthLoading() && healthData()) {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 p-2">
+                @for (group of healthData().groups; track group.key) {
+                    <div class="flex flex-col rounded-2xl border-2 overflow-hidden transition-shadow hover:shadow-lg"
+                         [class]="group.status === 'ok'   ? 'border-green-300' :
+                                  group.status === 'warn' ? 'border-orange-300' : 'border-red-300'">
+
+                        <!-- Cabecera de la tarjeta -->
+                        <div class="px-4 py-3 flex items-center justify-between"
+                             [class]="group.status === 'ok'   ? 'bg-green-50' :
+                                      group.status === 'warn' ? 'bg-orange-50' : 'bg-red-50'">
+                            <div class="flex items-center gap-2">
+                                <i class="pi text-lg"
+                                   [class]="group.icon + ' ' +
+                                     (group.status === 'ok'   ? 'text-green-600' :
+                                      group.status === 'warn' ? 'text-orange-500' : 'text-red-500')">
+                                </i>
+                                <span class="font-bold text-sm"
+                                      [class]="group.status === 'ok'   ? 'text-green-800' :
+                                               group.status === 'warn' ? 'text-orange-800' : 'text-red-800'">
+                                    {{group.name}}
+                                </span>
+                            </div>
+                            <p-tag
+                                [value]="statusLabel(group.status, group.configured_count, group.total_count)"
+                                [severity]="statusSeverity(group.status)"
+                                styleClass="text-xs">
+                            </p-tag>
+                        </div>
+
+                        <!-- Eventos del grupo -->
+                        <div class="flex flex-col divide-y divide-surface-100 bg-white flex-1">
+                            @for (event of group.events; track event.key) {
+                                <div class="flex items-start gap-2 px-4 py-3">
+                                    @if (event.configured) {
+                                        <!-- Evento configurado -->
+                                        <i class="pi pi-check-circle text-green-500 mt-0.5 flex-shrink-0"></i>
+                                        <div class="flex flex-col min-w-0">
+                                            <span class="text-xs font-semibold text-surface-700 leading-tight">
+                                                {{event.label}}
+                                            </span>
+                                            <span class="text-xs text-surface-400 mt-0.5 truncate"
+                                                  [title]="event.account_code + ' — ' + event.account_name">
+                                                <span class="font-mono text-primary-600">{{event.account_code}}</span>
+                                                — {{event.account_name}}
+                                            </span>
+                                            <span class="text-xs text-surface-300 mt-0.5">{{event.side}}</span>
+                                        </div>
+                                    } @else {
+                                        <!-- Evento faltante -->
+                                        <i class="pi pi-times-circle text-red-400 mt-0.5 flex-shrink-0"></i>
+                                        <div class="flex flex-col min-w-0 flex-1">
+                                            <span class="text-xs font-semibold text-surface-600 leading-tight">
+                                                {{event.label}}
+                                            </span>
+                                            <span class="text-xs text-surface-400 mt-0.5">{{event.side}}</span>
+                                            <p-button
+                                                label="Configurar"
+                                                icon="pi pi-plus"
+                                                size="small"
+                                                [text]="true"
+                                                severity="danger"
+                                                styleClass="p-0 mt-1 text-xs h-6"
+                                                (onClick)="openNew(event.key)">
+                                            </p-button>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     </p-card>
 
-    <!-- Tabla de Mapeos -->
-    <p-card styleClass="shadow-lg rounded-2xl border-none">
-        <app-customtable 
+    <!-- ══════════════════════════════════════════════════
+         TABLA DE TODOS LOS MAPEOS
+    ══════════════════════════════════════════════════ -->
+    <p-card>
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-surface-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
+                        <i class="pi pi-sliders-h text-white"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-primary-900 m-0">Configuraciones Activas</h3>
+                        <p class="text-surface-500 text-sm m-0">Todos los mapeos evento → cuenta registrados</p>
+                    </div>
+                </div>
+                <p-button label="Nuevo Mapeo" icon="pi pi-plus"
+                          (onClick)="openNew()" size="small">
+                </p-button>
+            </div>
+        </ng-template>
+
+        <app-customtable
             [loaderFunction]="loaderFunction"
-            [columns]="cols" 
-            [columnTemplates]="{ 'event_type_display': eventTemplate, 'document_type_name': docTypeTemplate, 'account_name': accountTemplate, 'actions': actions }"
-        >
-            <ng-template #eventTemplate let-row>
-                <span class="font-semibold text-primary-700">{{row.event_type_display}}</span>
-            </ng-template>
-
-            <ng-template #docTypeTemplate let-row>
-                @if (row.document_type_name) {
-                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">{{row.document_type_name}}</span>
-                } @else {
-                    <span class="text-surface-400 italic text-xs">General (Todos)</span>
-                }
-            </ng-template>
-
-            <ng-template #accountTemplate let-row>
-                <div class="flex flex-col">
-                    <span class="text-xs text-surface-400 font-mono">{{row.account_code}}</span>
-                    <span class="font-medium">{{row.account_name}}</span>
-                </div>
-            </ng-template>
-
-            <ng-template #actions let-row>
-                <div class="flex gap-1">
-                    <p-button icon="pi pi-pencil" [text]="true" (click)="editMapping(row)" severity="primary" pTooltip="Editar"></p-button>
-                    <p-button icon="pi pi-trash" [text]="true" (click)="deleteMapping(row.id)" severity="danger" pTooltip="Eliminar"></p-button>
-                </div>
-            </ng-template>
+            [columns]="cols"
+            [columnTemplates]="{
+                'event_type_display': eventTpl,
+                'document_type_name': docTypeTpl,
+                'account_code':       accountTpl,
+                'actions':            actionsTpl
+            }">
         </app-customtable>
     </p-card>
 
-    <!-- Modal Profesional Rediseñado -->
-    <p-dialog [(visible)]="displayModal" 
-              [header]="form.value.id ? 'Editar Configuración Contable' : 'Nueva Configuración Contable'" 
-              [modal]="true" 
-              [style]="{width: '500px'}"
-              [draggable]="false"
-              [resizable]="false"
-              styleClass="p-fluid rounded-2xl shadow-2xl">
-        
-        <form [formGroup]="form" class="flex flex-col gap-5 pt-4">
-            <!-- Sección de Evento -->
-            <div class="bg-surface-50 p-4 rounded-xl border border-surface-200">
-                <label class="block font-bold text-surface-700 mb-2 flex items-center gap-2">
-                    <i class="pi pi-bolt text-yellow-500"></i> Evento Automático
-                </label>
-                <p-select [options]="eventTypes()" 
-                          formControlName="event_type" 
-                          optionLabel="label" 
-                          optionValue="value" 
-                          placeholder="¿Qué evento desea mapear?"
-                          appendTo="body"
-                          styleClass="w-full shadow-sm">
-                </p-select>
-            </div>
-
-            <!-- Sección de Tipo de Documento (NUEVO) -->
-            <div class="p-1">
-                <label class="block font-bold text-surface-700 mb-2 flex items-center gap-2">
-                    <i class="pi pi-file text-blue-500"></i> Tipo de Documento (Opcional)
-                </label>
-                <p-select [options]="documentTypes()" 
-                          formControlName="document_type" 
-                          optionLabel="name" 
-                          placeholder="General (Aplica a todos)"
-                          [showClear]="true"
-                          appendTo="body"
-                          styleClass="w-full shadow-sm">
-                </p-select>
-                <small class="text-surface-400 italic block mt-1">Si selecciona uno, este mapeo será prioritario para ese tipo.</small>
-            </div>
-
-            <!-- Sección de Cuenta -->
-            <div class="p-1">
-                <label class="block font-bold text-surface-700 mb-2 flex items-center gap-2">
-                    <i class="pi pi-book text-primary-500"></i> Cuenta de Destino
-                </label>
-                <p-select [options]="accounts()" 
-                          formControlName="account" 
-                          optionLabel="name" 
-                          [filter]="true" 
-                          filterBy="name,code" 
-                          placeholder="Seleccione la cuenta contable"
-                          appendTo="body"
-                          styleClass="w-full shadow-sm">
-                    <ng-template let-acc pTemplate="item">
-                        <div class="flex justify-between items-center w-full">
-                            <span>{{acc.name}}</span>
-                            <span class="text-xs font-mono bg-surface-100 px-2 py-1 rounded">{{acc.code}}</span>
-                        </div>
-                    </ng-template>
-                </p-select>
-            </div>
-
-            <!-- Sección de Descripción -->
-            <div class="p-1">
-                <label class="block font-bold text-surface-700 mb-2 flex items-center gap-2">
-                    <i class="pi pi-align-left text-surface-400"></i> Glosa del Asiento
-                </label>
-                <input pInputText 
-                       id="description" 
-                       formControlName="description" 
-                       placeholder="Ej: Registro de ingreso por ventas directas" 
-                       class="w-full shadow-sm"/>
-            </div>
-        </form>
-
-        <ng-template pTemplate="footer">
-            <div class="flex justify-end gap-2 pt-4">
-                <p-button label="Cancelar" icon="pi pi-times" [text]="true" (click)="displayModal = false" severity="secondary"></p-button>
-                <p-button label="Guardar Configuración" icon="pi pi-check" (click)="save()" [disabled]="form.invalid" severity="primary" styleClass="px-4 shadow-md"></p-button>
-            </div>
-        </ng-template>
-    </p-dialog>
-
-
 </div>
+
+<!-- ── Templates de columna ──────────────────────────────── -->
+<ng-template #eventTpl let-row>
+    <span class="font-semibold text-primary-700 text-sm">{{row.event_type_display}}</span>
+</ng-template>
+
+<ng-template #docTypeTpl let-row>
+    @if (row.document_type_name) {
+        <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold">
+            {{row.document_type_name}}
+        </span>
+    } @else {
+        <span class="text-surface-400 italic text-xs">General</span>
+    }
+</ng-template>
+
+<ng-template #accountTpl let-row>
+    <div class="flex items-center gap-2">
+        <span class="font-mono text-xs bg-surface-100 px-2 py-0.5 rounded text-primary-700">
+            {{row.account_code}}
+        </span>
+        <span class="text-sm text-surface-700">{{row.account_name}}</span>
+    </div>
+</ng-template>
+
+<ng-template #actionsTpl let-row>
+    <div class="flex gap-1">
+        <p-button icon="pi pi-pencil" [text]="true" severity="primary"
+                  pTooltip="Editar" (onClick)="editMapping(row)">
+        </p-button>
+        <p-button icon="pi pi-trash" [text]="true" severity="danger"
+                  pTooltip="Eliminar" (onClick)="deleteMapping(row.id)">
+        </p-button>
+    </div>
+</ng-template>
+
+<!-- ── Diálogo de crear / editar ─────────────────────────── -->
+<p-dialog
+    [(visible)]="displayModal"
+    [header]="form.value.id ? 'Editar Mapeo Contable' : 'Nuevo Mapeo Contable'"
+    [modal]="true"
+    [style]="{width: '520px'}"
+    [draggable]="false">
+
+    <form [formGroup]="form" class="flex flex-col gap-5 pt-3">
+
+        <!-- Evento -->
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-surface-600 uppercase flex items-center gap-2">
+                <i class="pi pi-bolt text-yellow-500"></i> Evento de Negocio *
+            </label>
+            <p-select [options]="eventTypes()"
+                      formControlName="event_type"
+                      optionLabel="label" optionValue="value"
+                      placeholder="Seleccione el evento..."
+                      appendTo="body" class="w-full">
+            </p-select>
+            <small class="text-surface-400">El evento que disparará el asiento automático.</small>
+        </div>
+
+        <!-- Cuenta -->
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-surface-600 uppercase flex items-center gap-2">
+                <i class="pi pi-book text-primary-500"></i> Cuenta Contable *
+            </label>
+            <p-select [options]="accounts()"
+                      formControlName="account"
+                      optionLabel="name"
+                      [filter]="true" filterBy="name,code"
+                      placeholder="Busque por nombre o código..."
+                      appendTo="body" class="w-full">
+                <ng-template let-acc pTemplate="item">
+                    <div class="flex items-center justify-between w-full gap-3">
+                        <span class="text-sm">{{acc.name}}</span>
+                        <span class="font-mono text-xs bg-surface-100 px-2 py-0.5 rounded text-primary-600">
+                            {{acc.code}}
+                        </span>
+                    </div>
+                </ng-template>
+                <ng-template let-acc pTemplate="selectedItem">
+                    <span>{{acc.code}} — {{acc.name}}</span>
+                </ng-template>
+            </p-select>
+        </div>
+
+        <!-- Tipo de documento (opcional) -->
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-surface-600 uppercase flex items-center gap-2">
+                <i class="pi pi-file text-blue-500"></i> Tipo de Documento
+                <span class="text-surface-400 normal-case font-normal">(opcional — para mapeos específicos)</span>
+            </label>
+            <p-select [options]="documentTypes()"
+                      formControlName="document_type"
+                      optionLabel="name"
+                      placeholder="General — aplica a todos"
+                      [showClear]="true"
+                      appendTo="body" class="w-full">
+            </p-select>
+        </div>
+
+        <!-- Glosa -->
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-surface-600 uppercase flex items-center gap-2">
+                <i class="pi pi-align-left text-surface-400"></i> Glosa del Asiento
+            </label>
+            <input pInputText formControlName="description"
+                   placeholder="Ej: Registro ingreso por ventas de contado" />
+        </div>
+
+    </form>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2 pt-2">
+            <p-button label="Cancelar" severity="secondary" [text]="true"
+                      (onClick)="displayModal = false">
+            </p-button>
+            <p-button label="Guardar Mapeo" icon="pi pi-check"
+                      (onClick)="save()" [disabled]="form.invalid">
+            </p-button>
+        </div>
+    </ng-template>
+</p-dialog>

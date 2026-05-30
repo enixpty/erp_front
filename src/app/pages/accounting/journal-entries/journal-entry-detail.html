@@ -1,34 +1,108 @@
-@if (entry$ | async; as entry) {
-  <div class="p-4">
-    <p-card header="Detalle de Asiento: {{ entry.id }}">
-      <div class="grid grid-cols-2 gap-4 mb-6">
-        <div><strong>Fecha:</strong> {{ entry.date }}</div>
-        <div><strong>Estado:</strong> {{ entry.status }}</div>
-        <div class="col-span-2"><strong>Descripción:</strong> {{ entry.description }}</div>
-      </div>
+<p-toast></p-toast>
 
-      <table class="w-full border-collapse border border-surface-200">
-        <thead class="bg-surface-100">
-          <tr>
-            <th class="p-2 border">Cuenta</th>
-            <th class="p-2 border">Débito</th>
-            <th class="p-2 border">Crédito</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (line of entry.lines; track line.id) {
-            <tr>
-              <td class="p-2 border">{{ line.account_code }} - {{ line.account_name }}</td>
-              <td class="p-2 border text-right">{{ line.debit }}</td>
-              <td class="p-2 border text-right">{{ line.credit }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+@if (entry()) {
+<div class="p-4">
+    <p-card>
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-surface-200 bg-surface-50">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-primary rounded-xl shadow-sm">
+                        <i class="pi pi-book text-xl text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-primary-900 m-0">
+                            Asiento #{{entry().id}}
+                        </h2>
+                        <p class="text-surface-500 text-sm m-0">{{entry().reference ?? 'Sin referencia'}}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <p-tag [value]="statusLabel(entry().status)"
+                           [severity]="statusSeverity(entry().status)">
+                    </p-tag>
+                    @if (entry().status === 'DRAFT') {
+                        <p-button label="Asentar" icon="pi pi-check-circle"
+                                  severity="success"
+                                  (onClick)="postEntry()"
+                                  [loading]="isPosting()">
+                        </p-button>
+                    }
+                    <p-button label="Volver" icon="pi pi-arrow-left"
+                              severity="secondary" [outlined]="true"
+                              [routerLink]="['/accounting/entries']">
+                    </p-button>
+                </div>
+            </div>
+        </ng-template>
 
-      <div class="mt-4">
-        <p-button label="Volver" icon="pi pi-arrow-left" [routerLink]="['/accounting/entries']"></p-button>
-      </div>
+        <!-- Datos generales -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
+                <label class="text-xs font-bold text-surface-500 uppercase block mb-1">Fecha</label>
+                <span class="font-semibold text-surface-800">{{entry().date}}</span>
+            </div>
+            <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
+                <label class="text-xs font-bold text-surface-500 uppercase block mb-1">Periodo</label>
+                <span class="font-semibold text-surface-800">
+                    {{entry().fiscal_period_display ?? entry().fiscal_period}}
+                </span>
+            </div>
+            <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
+                <label class="text-xs font-bold text-surface-500 uppercase block mb-1">Creado por</label>
+                <span class="font-semibold text-surface-800">{{entry().created_by_name ?? entry().created_by}}</span>
+            </div>
+            <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
+                <label class="text-xs font-bold text-surface-500 uppercase block mb-1">Balance</label>
+                <span class="font-bold" [class]="isBalanced ? 'text-green-600' : 'text-red-600'">
+                    <i class="pi mr-1" [class]="isBalanced ? 'pi-check-circle' : 'pi-times-circle'"></i>
+                    {{ isBalanced ? 'Balanceado' : 'Desbalanceado' }}
+                </span>
+            </div>
+        </div>
+
+        <div class="bg-surface-50 p-3 rounded-lg border-l-4 border-primary mb-6">
+            <label class="text-xs font-bold text-surface-500 uppercase block mb-1">Descripción</label>
+            <p class="text-surface-800 m-0">{{entry().description}}</p>
+        </div>
+
+        <!-- Tabla de líneas -->
+        <p-table [value]="entry().lines" styleClass="p-datatable-sm p-datatable-striped"
+                 [showGridlines]="true">
+            <ng-template pTemplate="header">
+                <tr class="bg-primary-50 text-primary-900 uppercase text-xs">
+                    <th class="p-3 w-24">Código</th>
+                    <th class="p-3">Cuenta</th>
+                    <th class="p-3">Descripción</th>
+                    <th class="p-3 text-right w-36">Débito</th>
+                    <th class="p-3 text-right w-36">Crédito</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-line>
+                <tr>
+                    <td class="p-3 text-xs text-surface-500 font-mono">{{line.account_code}}</td>
+                    <td class="p-3 font-medium text-surface-800">{{line.account_name}}</td>
+                    <td class="p-3 text-sm text-surface-600">{{line.description}}</td>
+                    <td class="p-3 text-right font-semibold text-blue-700">
+                        @if (line.debit > 0) { {{line.debit | currency:'':'symbol':'1.2-2'}} }
+                    </td>
+                    <td class="p-3 text-right font-semibold text-indigo-700">
+                        @if (line.credit > 0) { {{line.credit | currency:'':'symbol':'1.2-2'}} }
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="footer">
+                <tr class="font-bold border-t-2 border-surface-400 bg-surface-100">
+                    <td colspan="3" class="p-3 text-right text-surface-700 uppercase text-sm">Totales</td>
+                    <td class="p-3 text-right text-blue-800 text-base">
+                        {{totalDebit | currency:'':'symbol':'1.2-2'}}
+                    </td>
+                    <td class="p-3 text-right text-indigo-800 text-base">
+                        {{totalCredit | currency:'':'symbol':'1.2-2'}}
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+
     </p-card>
-  </div>
+</div>
 }

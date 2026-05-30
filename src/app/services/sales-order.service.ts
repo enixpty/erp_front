@@ -24,6 +24,10 @@ export class SalesOrderService {
     return this.http.post(`${this.apiUrl}/${id}/create_invoice/`, {});
   }
 
+  generateInvoice(id: number, data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/invoice/`, data);
+  }
+
   printOrder(id: number): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${id}/print/`, { responseType: 'blob' });
   }

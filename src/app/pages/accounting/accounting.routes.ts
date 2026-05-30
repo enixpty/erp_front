@@ -5,6 +5,7 @@ import { JournalEntryFormComponent } from './journal-entries/journal-entry-form'
 import { JournalEntryDetailComponent } from './journal-entries/journal-entry-detail';
 import { FiscalPeriodsComponent } from './fiscal-periods/fiscal-periods';
 import { FinancialReportsComponent } from './reports/financial-reports';
+import { TrialBalanceComponent } from './reports/trial-balance';
 import { AccountingMappingsComponent } from './mappings/accounting-mappings';
 
 export const accountingRoutes: Routes = [
@@ -35,5 +36,9 @@ export const accountingRoutes: Routes = [
   {
     path: 'reports',
     component: FinancialReportsComponent
+  },
+  {
+    path: 'trial-balance',
+    component: TrialBalanceComponent
   }
 ];

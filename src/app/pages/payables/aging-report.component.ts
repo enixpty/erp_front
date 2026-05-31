@@ -30,6 +30,32 @@ export class DebtMaturityComponent implements OnInit {
     this.loadData();
   }
 
+  // ── Totales calculados para el encabezado de salud ───────────
+  get totalDebt(): number {
+    const r = this.report();
+    if (!r) return 0;
+    return parseFloat(r.total_pending) || 0;
+  }
+
+  get currentDebt(): number {
+    const r = this.report();
+    return r ? (Number(r.current?.total) || 0) : 0;
+  }
+
+  get overdueDebt(): number {
+    const r = this.report();
+    if (!r) return 0;
+    return (Number(r.overdue_1_30?.total) || 0)
+         + (Number(r.overdue_31_60?.total) || 0)
+         + (Number(r.overdue_61_90?.total) || 0)
+         + (Number(r.overdue_90_plus?.total) || 0);
+  }
+
+  get overduePercent(): number {
+    const total = this.totalDebt;
+    return total > 0 ? (this.overdueDebt / total) * 100 : 0;
+  }
+
   loadData() {
     this.payablesService.getAgingReport().subscribe({
       next: (res) => {

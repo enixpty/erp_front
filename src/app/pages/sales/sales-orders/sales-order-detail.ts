@@ -174,6 +174,11 @@ export class SalesOrderDetailComponent implements OnInit {
           detail: `Factura ${res.document_number} creada correctamente`,
           sticky: true
         });
+        // Abrir el PDF de la factura automáticamente
+        this.salesInvoiceService.printInvoice(res.invoice_id).subscribe((blob: Blob) => {
+          const url = window.URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        });
         this.loadOrder();
         setTimeout(() => {
           this.router.navigate(['/sales/invoices', res.invoice_id]);

@@ -15,7 +15,8 @@
                     </div>
                     <div class="flex gap-3">
                     <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [routerLink]="['/sales/invoices']" styleClass="p-button-outlined"></p-button>
-                    <p-button label="Generar Factura" icon="pi pi-check" (onClick)="save()" severity="success" [disabled]="!mappingValid()"></p-button>   
+                    <p-button label="Generar Factura" icon="pi pi-check" (onClick)="save()" severity="success" [disabled]="!canGenerate" [loading]="saving()"
+                              [pTooltip]="requiresFullPayment && !isPaymentBalanced ? 'Complete el pago total de la factura de contado' : ''" tooltipPosition="bottom"></p-button>
                     </div>
                     </div>
                     </ng-template>
@@ -55,7 +56,7 @@
             <div class="md:col-span-4 flex flex-col gap-2">
                 <label class="text-xs font-bold text-surface-600 uppercase">Email Destinatario</label>
                 <div class="flex items-center gap-2">
-                    <input type="checkbox" formControlName="send_by_email" id="send_by_email" class="p-checkbox" />
+                    <p-checkbox formControlName="send_by_email" [binary]="true" inputId="send_by_email"></p-checkbox>
                     <input pInputText formControlName="email_target" placeholder="Correo (opcional)" class="w-full" />
                 </div>
             </div>
@@ -90,7 +91,20 @@
             <div class="md:col-span-12">
                 <div class="flex justify-between items-center mb-4 bg-surface-50 p-3 rounded-lg border-l-4 border-primary">
                     <h3 class="text-md font-bold text-surface-800 m-0">Detalle de Productos</h3>
-                    <p-button label="Agregar Material" icon="pi pi-plus" size="small" (click)="addDetail()"></p-button>
+                    <p-button label="Agregar manual" icon="pi pi-plus" size="small" [outlined]="true" (click)="addDetail()"></p-button>
+                </div>
+
+                <!-- Barra de escaneo / mostrador: código + Enter agrega la línea -->
+                <div class="flex items-center gap-3 mb-4 bg-primary-50 border border-primary-200 rounded-xl px-4 py-3">
+                    <i class="pi pi-qrcode text-2xl text-primary"></i>
+                    <input #scanBox pInputText
+                           (keydown.enter)="quickAdd(scanBox.value); scanBox.value=''"
+                           placeholder="Escanee el código de barras o teclee el código del producto y presione Enter…"
+                           class="flex-1 text-base"
+                           autocomplete="off" />
+                    <span class="text-xs text-primary-700 font-semibold whitespace-nowrap hidden md:inline">
+                        <i class="pi pi-bolt mr-1"></i>Enter para agregar
+                    </span>
                 </div>
 
                 <div class="border border-surface-200 rounded-xl overflow-hidden shadow-sm">
@@ -112,23 +126,33 @@
                             <ng-template pTemplate="body" let-detail let-i="rowIndex">
                                 <tr [formGroup]="detail" class="hover:bg-blue-50/30 transition-colors">
                                     <td class="p-3">
-                                        <p-select [options]="skus" formControlName="sku" optionLabel="searchLabel" optionValue="id" 
+                                        <p-select [options]="skus" formControlName="sku" optionLabel="searchLabel" optionValue="id"
                                             [filter]="true" filterBy="searchLabel" appendTo="body" (onChange)="onSkuChange(i)" class="w-full"></p-select>
                                     </td>
                                     <td class="p-3">
-                                        <input pInputText type="number" formControlName="quantity" (change)="calculateRowSubtotal(i)" class="w-full text-center" />
+                                        <input pInputText type="number" inputmode="decimal" min="0" formControlName="quantity"
+                                            (input)="calculateRowSubtotal(i)" class="w-full text-center" />
                                     </td>
                                     <td class="p-3">
-                                        <input pInputText type="number" formControlName="price" (change)="calculateRowSubtotal(i)" class="w-full text-center" />
+                                        <input pInputText type="number" inputmode="decimal" min="0" formControlName="price"
+                                            (input)="calculateRowSubtotal(i)" class="w-full text-center" />
                                     </td>
                                     <td class="p-3">
-                                        <input pInputText type="number" formControlName="discount" (change)="calculateRowSubtotal(i)" class="w-full text-center" />
+                                        <input pInputText type="number" inputmode="decimal" min="0" formControlName="discount"
+                                            (input)="calculateRowSubtotal(i)" class="w-full text-center" />
                                     </td>
                                     <td class="p-3 text-center">
-                                        <input type="checkbox" formControlName="tax_exempt" (change)="calculateRowSubtotal(i)" class="w-5 h-5 accent-primary" />
+                                        <!-- Solo lectura: el exento se toma de la configuración del producto -->
+                                        @if (detail.get('tax_exempt').value) {
+                                            <span class="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-full">
+                                                <i class="pi pi-check mr-1"></i>Sí
+                                            </span>
+                                        } @else {
+                                            <span class="text-xs text-surface-400">No</span>
+                                        }
                                     </td>
-                                    <td class="p-3 text-center">
-                                        <input pInputText type="number" formControlName="tax_percent" (change)="calculateRowSubtotal(i)" class="w-16 text-center" [readonly]="true" />
+                                    <td class="p-3 text-center text-surface-600">
+                                        {{detail.get('tax_exempt').value ? '—' : (detail.get('tax_percent').value + '%')}}
                                     </td>
                                     <td class="p-3 text-right text-surface-600">
                                         {{detail.get('tax').value | currency}}
@@ -138,6 +162,14 @@
                                     </td>
                                     <td class="p-3">
                                         <p-button icon="pi pi-trash" severity="danger" [text]="true" (click)="removeDetail(i)"></p-button>
+                                    </td>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="emptymessage">
+                                <tr>
+                                    <td colspan="9" class="text-center py-10 text-surface-400">
+                                        <i class="pi pi-shopping-cart text-3xl mb-2 block"></i>
+                                        Escanee o teclee un código en la barra de arriba para agregar productos.
                                     </td>
                                 </tr>
                             </ng-template>
@@ -204,12 +236,12 @@
                                           class="flex-1">
                                 </p-select>
 
-                                <!-- Monto con prefijo B/. -->
-                                <div class="flex items-center gap-1 border border-surface-300 rounded-lg px-3 bg-white focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                                <!-- Monto con prefijo B/. (input sin pInputText para evitar borde doble) -->
+                                <div class="flex items-center gap-1 border border-surface-300 rounded-lg px-3 py-2 bg-white focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
                                     <span class="text-surface-500 text-sm font-bold select-none">B/.</span>
-                                    <input pInputText type="number" formControlName="amount"
+                                    <input type="number" inputmode="decimal" min="0" formControlName="amount"
                                            placeholder="0.00"
-                                           class="w-24 text-right border-0 shadow-none focus:ring-0 p-1 bg-transparent" />
+                                           class="w-24 text-right border-0 outline-none focus:outline-none bg-transparent p-0 m-0" />
                                 </div>
 
                                 <!-- Referencia -->
@@ -263,7 +295,8 @@
                     </div>
                     <div class="flex justify-between items-center text-surface-600 text-sm">
                         <span>Descuento Global (%):</span>
-                        <input pInputText type="number" formControlName="global_discount" (change)="calculateTotals()" class="w-20 text-right" />
+                        <input pInputText type="number" inputmode="decimal" min="0" max="100" formControlName="global_discount"
+                               (input)="calculateTotals()" class="w-20 text-right" />
                     </div>
                     <div class="flex justify-between items-center text-surface-600 text-sm">
                         <span>ITBMS Total:</span>

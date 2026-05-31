@@ -13,6 +13,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
+import { CheckboxModule } from 'primeng/checkbox';
 import { environment } from '@src/environments/environment';
 import { SalesInvoiceService } from '@src/app/services/sales-invoice.service';
 import { ClientService } from '@src/app/services/client.service';
@@ -24,7 +25,7 @@ import { PaymentTypeService } from '@src/app/services/payment-type.service';
 @Component({
   selector: 'app-sales-invoice-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, DatePickerModule, Toast, RouterLink, ConfirmDialogModule, TooltipModule],
+  imports: [CommonModule, ReactiveFormsModule, CardModule, ButtonModule, Select, InputTextModule, TableModule, DividerModule, DatePickerModule, Toast, RouterLink, ConfirmDialogModule, TooltipModule, CheckboxModule],
   providers: [MessageService, ConfirmationService],
   templateUrl: './sales-invoice-form.html'
 })
@@ -43,6 +44,7 @@ export class SalesInvoiceFormComponent implements OnInit {
 
   mappingValid = signal<boolean>(true);
   missingMappings = signal<string[]>([]);
+  saving = signal<boolean>(false);
 
   form: FormGroup = this.fb.group({
     client: [null, Validators.required],
@@ -113,6 +115,22 @@ export class SalesInvoiceFormComponent implements OnInit {
     return Math.abs(this.paymentPending) <= 0.01;
   }
 
+  /** Una factura de contado requiere que los pagos cubran el total. */
+  get requiresFullPayment(): boolean {
+    const id = this.form.get('document_type')?.value;
+    const dt = this.documentTypes.find(d => d.id === id);
+    return dt?.payment_term === 'CASH';
+  }
+
+  /** Habilita "Generar Factura": mapeo OK, no guardando, y si es contado, pagos completos. */
+  get canGenerate(): boolean {
+    if (!this.mappingValid() || this.saving()) return false;
+    if (this.requiresFullPayment) {
+      return this.payments.length > 0 && this.isPaymentBalanced;
+    }
+    return true;
+  }
+
   ngOnInit() {
     this.form.patchValue({ due_date: new Date() });
     this.loadInitialData();
@@ -175,9 +193,7 @@ export class SalesInvoiceFormComponent implements OnInit {
     
     this.skuService.getSkus({ nopaginate: true }).subscribe(data => {
         this.skus = (data.results || data).map((s: any) => ({ ...s, searchLabel: `${s.code} - ${s.name}` }));
-        if (this.details.length === 0) {
-            this.addDetail();
-        }
+        // Flujo scan-first: no se agrega fila vacía; el usuario escanea/teclea el código.
         this.isLoaded = true;
         this.cd.detectChanges();
     });
@@ -195,6 +211,60 @@ export class SalesInvoiceFormComponent implements OnInit {
       subtotal: [0]
     });
     this.details.push(detailForm);
+  }
+
+  /**
+   * Modo mostrador: busca un producto por código (exacto) o por coincidencia única
+   * y lo agrega/incrementa. Pensado para lector de código de barras + Enter.
+   */
+  quickAdd(rawCode: string) {
+    const term = (rawCode || '').trim();
+    if (!term) return;
+
+    const lower = term.toLowerCase();
+    let sku = this.skus.find(s => (s.code || '').toLowerCase() === lower);
+    if (!sku) {
+      const matches = this.skus.filter(s => (s.searchLabel || '').toLowerCase().includes(lower));
+      if (matches.length === 1) {
+        sku = matches[0];
+      } else if (matches.length > 1) {
+        this.msg.add({ severity: 'info', summary: 'Varias coincidencias', detail: `"${term}" coincide con ${matches.length} productos. Sea más específico o use el botón Agregar.` });
+        return;
+      }
+    }
+
+    if (!sku) {
+      this.msg.add({ severity: 'warn', summary: 'No encontrado', detail: `No hay producto con código o nombre "${term}".` });
+      return;
+    }
+
+    this.addOrIncrement(sku);
+  }
+
+  /** Si el producto ya está en la factura, suma 1 a la cantidad; si no, agrega una línea nueva. */
+  addOrIncrement(sku: any) {
+    const idx = this.details.controls.findIndex(c => c.get('sku')?.value === sku.id);
+    if (idx >= 0) {
+      const ctrl = this.details.at(idx);
+      ctrl.get('quantity')?.setValue((Number(ctrl.get('quantity')?.value) || 0) + 1, { emitEvent: false });
+      this.calculateRowSubtotal(idx);
+      this.msg.add({ severity: 'success', summary: 'Cantidad +1', detail: `${sku.code} — ${sku.name}`, life: 1200 });
+    } else {
+      const detailForm = this.fb.group({
+        sku: [sku.id, Validators.required],
+        quantity: [1, [Validators.required, Validators.min(0.1)]],
+        price: [sku.sell_price || 0, [Validators.required, Validators.min(0)]],
+        discount: [0, [Validators.min(0)]],
+        tax_exempt: [sku.tax_exempt || false],
+        tax_percent: [sku.tax_percent !== undefined ? parseFloat(sku.tax_percent) : 7.00],
+        tax: [0],
+        subtotal: [0]
+      });
+      this.details.push(detailForm);
+      this.calculateRowSubtotal(this.details.length - 1);
+      this.msg.add({ severity: 'success', summary: 'Producto agregado', detail: `${sku.code} — ${sku.name}`, life: 1200 });
+    }
+    this.cd.detectChanges();
   }
 
   addPayment() {
@@ -270,6 +340,13 @@ export class SalesInvoiceFormComponent implements OnInit {
   }
 
   save() {
+    if (this.saving()) return; // evitar doble submit
+
+    if (this.details.length === 0) {
+      this.msg.add({ severity: 'warn', summary: 'Factura vacía', detail: 'Agregue al menos un producto (escanee o teclee el código).' });
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -311,8 +388,10 @@ export class SalesInvoiceFormComponent implements OnInit {
         formData.due_date = formData.due_date.toISOString().split('T')[0];
     }
     
+    this.saving.set(true);
     this.invoiceService.createInvoice(formData).subscribe({
       next: (res) => {
+        this.saving.set(false);
         if (res.status === 'PENDING_AUTHORIZATION') {
           this.confirmationService.confirm({
             message: `La factura ${res.document_number} ha sido creada pero requiere AUTORIZACIÓN de un supervisor debido a límites de crédito o descuentos. No se generará el PDF hasta que sea aprobada.`,
@@ -337,6 +416,7 @@ export class SalesInvoiceFormComponent implements OnInit {
         }
       },
       error: (err) => {
+        this.saving.set(false);
         const errorMsg = err.error.error || 'Error al facturar';
         this.msg.add({ severity: 'error', summary: 'Error', detail: errorMsg });
       }
